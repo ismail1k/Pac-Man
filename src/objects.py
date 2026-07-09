@@ -1,71 +1,9 @@
 import pygame, random, time, os
 from typing import Any, Callable
-from abc import ABC, abstractmethod
+from mazegenerator import MazeGenerator
 from src.parsing import Configuration
-from src.helpers import Controller
-from src.visualizer import Visualizer, Widget
-
-
-class Playable(ABC):
-    def __init__(self, canvas: Any, states: dict = {}) -> None:
-        self.canvas: Any = canvas
-        self.states: dict = states
-        self.cell: tuple[int, int] = (0, 0)
-        self.speed: float = 2
-        self.direction: str = ''
-        self._cache: dict = {}
-
-    def thread(self) -> None:
-        if self.states.get('pause') or self.states.get('freeze'):
-            return None
-        if self.direction:
-            target = self.canvas.navigate(self.cell, self.direction)
-            target_x, target_y = self.canvas.CellToPosition(target)
-            if abs(self.left - target_x) <= self.speed:
-                self.left = target_x
-            elif self.left < target_x:
-                self.left += self.speed
-            elif self.left > target_x:
-                self.left -= self.speed
-            if abs(self.top - target_y) <= self.speed:
-                self.top = target_y
-            elif self.top < target_y:
-                self.top += self.speed
-            elif self.top > target_y:
-                self.top -= self.speed
-            if self.left == target_x and self.top == target_y:
-                self.cell = target
-                if hasattr(self, 'behaviour'):
-                    self.behaviour()
-                direction = self._cache.get("direction")
-                if direction and self.canvas.navigate(self.cell, direction):
-                    self.direction = direction
-                elif self.direction and self.canvas.navigate(self.cell, self.direction):
-                    pass
-                else:
-                    self.direction = ""
-        if not self.direction:
-            if hasattr(self, 'behaviour'):
-                self.behaviour()
-            direction: str | None = self._cache.get('direction')
-            target: tuple[int, int] | None = self.canvas.navigate(self.cell, direction)
-            if direction and target:
-                self.direction = direction
-                if self.canvas.navigate(target, direction):
-                    self._cache.update({'direction': direction})
-            if direction and not target:
-                self._cache.update({'direction': ''})
-
-    def spawn(self, cell_left: int, cell_top: int) -> None:
-        if cell_left < 0:
-            cell_left = len(self.canvas.maze[0]) - 1
-        if cell_top < 0:
-            cell_top = len(self.canvas.maze) - 1
-        self.direction = ""
-        self.cell = (cell_left, cell_top)
-        self.position = self.canvas.CellToPosition(self.cell)
-        self.offset_x += int((Canvas.cell_size / 2) - (self.width / 2)) 
-        self.offset_y += int((Canvas.cell_size / 2) - (self.height / 2)) 
+from src.visualizer import Visualizer
+from src.helpers import Widget, Playable, Controller
 
 
 class Reward(Widget, Playable):
@@ -80,19 +18,19 @@ class Reward(Widget, Playable):
         Widget.__init__(self, pygame.transform.smoothscale(surface, size))
         Playable.__init__(self, canvas, states)
         self.special: bool = special
+        self.padding.update({
+            'left': 15 if self.special else 22,
+            'bottom': 15 if self.special else 22,
+            'right': 15 if self.special else 22,
+            'top': 15 if self.special else 22
+        })
 
-    def OnPlayerClaimReward(self, player: Any) -> None:
+    def onPlayerClaimReward(self, player: Any) -> None:
         score: int = 2000 if self.special else 100
-        player.states['score'] += score
-
-    def render(self, visual: Any) -> None:
-        x, y = (15, 15) if self.special else (25, 25)
-        self.offset_x += x
-        self.offset_y += y
-        visual.screen.blit(self.surface, self.position)
+        player.states.update({'score': player.states.get('score') + score})
 
 
-class Player(Widget, Playable):
+class Player(Widget, Playable, Controller):
     textures: list[str] = [
         "assets/images/player_close.png",
         "assets/images/player_open.png",
@@ -100,6 +38,12 @@ class Player(Widget, Playable):
     def __init__(self, canvas: Any, states: dict = {}) -> None:
         Widget.__init__(self, pygame.Surface((0, 0)))
         Playable.__init__(self, canvas, states)
+        Controller.__init__(self)
+        self.onClick(self.ACTION_UP, lambda: self._cache.update({'direction': "N"}))
+        self.onClick(self.ACTION_DOWN, lambda: self._cache.update({'direction': "S"}))
+        self.onClick(self.ACTION_LEFT, lambda: self._cache.update({'direction': "W"}))
+        self.onClick(self.ACTION_RIGHT, lambda: self._cache.update({'direction': "E"}))
+        self.padding.update({'left': 15, 'bottom': 15, 'right': 15, 'top': 15})
 
     @property
     def surface(self) -> pygame.Surface:
@@ -124,18 +68,7 @@ class Player(Widget, Playable):
         surface = pygame.transform.flip(surface, False, flip)
         return pygame.transform.rotate(surface, angle)
 
-    def control(self, controller: Controller) -> None:
-        actions: list[int] = []
-        self.controller: Controller = controller
-        def update(direction: str) -> None:
-            self._cache.update({"direction": direction})
-        actions.extend(self.controller.onclick(Controller.ACTION_UP, (update, "N")))
-        actions.extend(self.controller.onclick(Controller.ACTION_DOWN, (update, "S")))
-        actions.extend(self.controller.onclick(Controller.ACTION_LEFT, (update, "W")))
-        actions.extend(self.controller.onclick(Controller.ACTION_RIGHT, (update, "E")))
-        self._cache.update({'controller_actions': actions})
-
-    def OnPlayerDead(self, opponent: Playable) -> None:
+    def onPlayerDead(self, opponent: Playable) -> None:
         self.states.update({'freeze': True})
         self.states.update({'hearts': self.states.get('hearts') - 1})
         if self.states.get('hearts') <= 0:
@@ -147,14 +80,12 @@ class Player(Widget, Playable):
         self.spawn(8, 7)
         self.states.update({'freeze': False})
 
-
-    def OnDestroy(self) -> None:
-        self.controller.destroy(self.actions)
+    def onDestroy(self) -> None:
+        self.destroyControllerEvents()
 
     def render(self, visual: Visualizer) -> None:
+        self.listenControllerEvents(visual.events)
         self.thread()
-        self.offset_x += 13
-        self.offset_y += 13
         visual.screen.blit(self.surface, self.position)
 
 
@@ -168,6 +99,7 @@ class Ghost(Widget, Playable):
     def __init__(self, canvas: Any, states: dict = {}) -> None:
         Widget.__init__(self, pygame.Surface((0, 0)))
         Playable.__init__(self, canvas, states)
+        self.padding.update({'left': 15, 'bottom': 15, 'right': 15, 'top': 15})
         self.speed: float = 1.3
         self.type: int = 0
 
@@ -201,27 +133,20 @@ class Ghost(Widget, Playable):
         else:
             self._cache["direction"] = ""
 
-    def OnPlayerEaten(self, player: Playable) -> None:
-        player.OnPlayerDead(self)
+    def onPlayerEaten(self, player: Playable) -> None:
+        player.onPlayerDead(self)
 
     def render(self, visual: Visualizer) -> None:
         self.thread()
-        self.offset_x += 13
-        self.offset_y += 13
         visual.screen.blit(self.surface, self.position)
 
 
 class Canvas(Widget):
     thickness = 5
     cell_size: int = 60
-    def __init__(self, maze: list[list[int]], states: dict = {}) -> None:
+    def __init__(self) -> None:
         super().__init__(pygame.Surface((0, 0)))
-        self.states: dict = states
-        self.maze: list[list[int]] = maze
-        self.size = (
-            (len(maze[0]) * self.cell_size) + self.thickness,
-            (len(maze) * self.cell_size) + self.thickness
-        )
+        self.maze: list[list[int]] = []
 
     @property
     def surface(self) -> pygame.Surface:
@@ -277,6 +202,15 @@ class Canvas(Widget):
                 if tile is not None:
                     surface.blit(tile, pos)
         return surface
+
+    def generate(self, size: tuple[int, int]) -> None:
+        generator = MazeGenerator((18, 12))
+        generator.generate()
+        self.maze = generator.maze
+        self.size = (
+            (len(self.maze[0]) * self.cell_size) + self.thickness,
+            (len(self.maze) * self.cell_size) + self.thickness
+        )
 
     def neighbors(self, cell: tuple[int, int]) -> list[tuple[int, int]]:
         neighbors: list[tuple[int, int]] = []

@@ -43,12 +43,12 @@ class VBlock(Widget):
 
 
 class VOption(Widget):
-    def __init__(self, label: str, onselect: tuple[Callable, tuple], position: tuple[int, int] = (0, 0)) -> None:
+    def __init__(self, label: str, onselect: Callable, position: tuple[int, int] = (0, 0)) -> None:
         self.text = VText(label, color=(255, 255, 255))
         super().__init__(self.text.surface, position)
         self.padding = self.text.padding
         self.padding.update({'left': 5, 'right': 5})
-        self.onselect: tuple[Callable, tuple] = onselect
+        self.onselect: Callable = onselect
         self.focus: bool = False
 
     def render(self, visual: Any) -> None:
@@ -59,13 +59,13 @@ class VOption(Widget):
         visual.screen.blit(self.text.surface, self.position)
 
 
-class VSelect(Widget):
-    def __init__(self, options: list[VOption], controller: Controller, position: tuple[int, int] = (0, 0), visible: bool | Callable = True) -> None:
-        super().__init__(pygame.Surface((0, 0)), position)
-        self._cache: dict = {}
+class VSelect(Widget, Controller):
+    def __init__(self, options: list[VOption], position: tuple[int, int] = (0, 0), visible: bool | Callable = True) -> None:
+        Widget.__init__(self, pygame.Surface((0, 0)), position)
+        Controller.__init__(self)
         self.options: list[VOption] = []
-        self.focus: int = 0
         self.visible: bool | Callable = visible
+        self.focus: int = 0
         for option in options:
             option.offset_x = self.offset_x + self.left
             option.offset_y = self.offset_y + self.top
@@ -74,12 +74,10 @@ class VSelect(Widget):
                 self.width = option_w
             self.height += option_h
             self.options.append(option)
-        self.controller: Controller = controller
-        self.navigate(controller)
         self.size = (self.width, self.height)
+        self.controller()
 
-    def navigate(self, controller: Controller) -> None:
-        events: list[int] = []
+    def controller(self) -> None:
         def up() -> None:
             if self.focus > 0:
                 self.focus -= 1
@@ -87,15 +85,14 @@ class VSelect(Widget):
             if self.focus < len(self.options) - 1:
                 self.focus += 1
         def select() -> None:
-            function, args = self.options[self.focus].onselect
-            function(*args)
+            self.options[self.focus].onselect()
 
-        events.extend(controller.onclick(Controller.ACTION_UP, (up, ())))
-        events.extend(controller.onclick(Controller.ACTION_DOWN, (down, ())))
-        events.extend(controller.onclick(Controller.ACTION_CONFIRM, (select, ())))
-        self._cache.update({'events': events})
+        self.onClick(self.ACTION_UP, lambda: up())
+        self.onClick(self.ACTION_DOWN, lambda: down())
+        self.onClick(self.ACTION_CONFIRM, lambda: select())
 
     def render(self, visual: Any) -> None:
+        self.listenControllerEvents(visual.events)
         offset_x, offset_y = (self.offset_x, self.offset_y)
         for index, option in enumerate(self.options):
             option.offset_x = offset_x + self.left
@@ -106,8 +103,8 @@ class VSelect(Widget):
                 option.focus = True
             option.render(visual)
 
-    def OnDestroy(self) -> None:
-        self.controller.destroy(self._cache.get('events'))
+    def onDestroy(self) -> None:
+        self.destroyControllerEvents()
 
 
 class VContainer(Widget):
@@ -116,18 +113,19 @@ class VContainer(Widget):
         fullscreen: bool = False, inline: bool = False
         ) -> None:
         super().__init__(pygame.Surface((0, 0)), position)
+        self.elements: list[Any] = elements
         self.visible: bool | Callable = visible
         self.fullscreen: bool = fullscreen
         self.absolute: bool = absolute
         self.inline: bool = inline
-        self.elements: list[Any] = elements
+        self.adjust()
+
+    def adjust(self) -> None:
         offset_x, offset_y = self.position
         for element in self.elements:
+            element.offset_x = offset_x
+            element.offset_y = offset_y
             element_width, element_height = element.size
-            element_width += self.offset_x + element.offset_x + element.left
-            element_height += self.offset_y + element.offset_y + element.top
-            element.offset_x += offset_x
-            element.offset_y += offset_y
             if self.absolute:
                 if self.width < element_width:
                     self.width = element_width
@@ -144,23 +142,13 @@ class VContainer(Widget):
                 self.height += element_height
                 if self.width < element_width:
                     self.width = element_width
-            if isinstance(element, VContainer):
-                element.adjust()
         if self.fullscreen:
             screen_width, screen_height = Visualizer.resolution
-            self.offset_x = (screen_width/2) - (self.width/2)
-            self.offset_y = (screen_height/2) - (self.height/2)
-            for element in self.elements:
-                element.offset_x += self.offset_x
-                element.offset_y += self.offset_y
-                if isinstance(element, VContainer):
-                    element.adjust()
-
-    def adjust(self) -> None:
-        offset_x, offset_y = self.offset
+            self.left = (screen_width/2) - (self.width/2)
+            self.top = (screen_height/2) - (self.height/2)
         for element in self.elements:
-            element.offset_x += offset_x
-            element.offset_y += offset_y
+            element.offset_x += self.left
+            element.offset_y += self.top
             if isinstance(element, VContainer):
                 element.adjust()
 

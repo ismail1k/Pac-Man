@@ -14,7 +14,10 @@ class Configuration:
         except FileNotFoundError:
             raise ParsingException(f"Fail to load file '{filename}'")
         except json.decoder.JSONDecodeError:
-            raise ParsingException(f"File '{filename}' not valid")
+            raise ParsingException(f"File '{filename}' not valid JSON")
 
     def validate(self) -> None:
+        pass
+
+    def get(self, key: str, default: Any = None) -> Any:
         pass

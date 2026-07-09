@@ -1,73 +1,95 @@
-import pygame
+import pygame, sys
 from abc import ABC
-from src.interface import VContainer, VImage, VText
-from src.visualizer import Visualizer, Widget
-from src.helpers import Controller
+from typing import Callable
+from src.visualizer import Visualizer
+from src.interface import VContainer, VImage, VText, VSelect, VOption
+from src.helpers import Widget, Controller
 from src.playground import Gameplay
 
 
-class Screen(Widget, ABC):
+class Scene(Widget, ABC):
     def __init__(self, scene: Widget) -> None:
         Widget.__init__(self, pygame.Surface(Visualizer.resolution))
-        self.scene: Widget = scene
+        self._scene: Widget = scene
 
     def render(self, visual: Visualizer) -> None:
-        self.scene.render(visual)
+        self._scene.render(visual)
 
 
-class GameplayScreen(Screen):
-    def __init__(self, gameplay: Gameplay) -> None:
+class MainScreen(Scene):
+    def __init__(self,
+        play: Callable,
+        leaderboard: Callable,
+        instructions: Callable,
+        ) -> None:
+        super().__init__(
+            VContainer([
+                VImage("assets/images/pac-man-logo.png", size=(289 * 2, 70 * 2)),
+                VSelect([
+                    VOption("1 Start Game", onselect=lambda: play()),
+                    VOption("2 View Highscores", onselect=lambda: leaderboard()),
+                    VOption("3 Instructions", onselect=lambda: instructions()),
+                    VOption("4 Exit", onselect=lambda: sys.exit(0)),
+                ], position=(35, 20))
+            ], fullscreen=True)
+        )
+
+
+class GameplayScreen(Scene, Controller):
+    def __init__(self, gameplay: Gameplay, pause: Callable) -> None:
         screen_w, screen_h = Visualizer.resolution
-        image: Widget = VImage("assets/images/pac-man-logo.png")
+        image: Widget = self.image()
         image.left += (gameplay.width/2) - (image.width/2) - 25
         image.top -= image.height + 10
-        score: Widget = VText(lambda: f"Score: {gameplay.states.get('score')}")
+        score: Widget = self.score()
         score.top -= score.height + 10
-        hearts = VContainer([
-            VImage(
-                "assets/images/player_open.png", size=(40, 40),
-                visible=lambda: gameplay.states.get('hearts') >= 1
-            ),
-            VImage(
-                "assets/images/player_open.png", size=(40, 40),
-                visible=lambda: gameplay.states.get('hearts') >= 2
-            ),
-            VImage(
-                "assets/images/player_open.png", size=(40, 40),
-                visible=lambda: gameplay.states.get('hearts') >= 3
-            ),
-        ], inline=True)
-        hearts.offset_x += gameplay.width - hearts.width
-        hearts.offset_y -= hearts.height + 10
-        super().__init__(
+        hearts = self.hearts()
+        hearts.top = gameplay.height / 2
+        Controller.__init__(self)
+        self.onClick(self.ACTION_PAUSE, lambda: pause())
+        self.gameplay: Gameplay = gameplay
+        Scene.__init__(self,
             VContainer(
                 [gameplay, score, image, hearts],
-                visible=lambda: not gameplay.states.get('pause'),
                 fullscreen=True,
                 absolute=True,
             )
         )
 
+    def image(self) -> Widget:
+        return VImage("assets/images/pac-man-logo.png")
 
-class PauseScreen(Screen):
-    def __init__(self, states: dict = {}) -> None:
-        super().__init__(
-            VContainer([
-                VImage("assets/images/pac-man-logo.png", size=(289 * 2, 70 * 2)),
-                VText("Pause", position=(210, 20)),
-            ], visible=lambda: self.states.get('pause'))
+    def score(self) -> Widget:
+        return VText(lambda: f"Score: {self.gameplay.states.get('score')}")
+
+    def hearts(self) -> Widget:
+        attempts: list[Widget] = []
+        for index in range(3):
+            attempts.append(
+                VImage(
+                    "assets/images/player_open.png", size=(40, 40),
+                    visible=lambda: self.gameplay.states.get('hearts') > index
+                )
+            )
+        return VContainer(attempts, inline=True)
+
+    def render(self, visual: Visualizer) -> None:
+        self.listenControllerEvents(visual.events)
+        Scene.render(self, visual)
+
+
+class PauseScreen(Scene):
+    def __init__(self, resume: Callable, launch: Callable) -> None:
+        Scene.__init__(self,
+            VContainer(
+                [
+                    VImage("assets/images/pac-man-logo.png", size=(289 * 2, 70 * 2)),
+                    VSelect([
+                        VOption("1 Pause", onselect=lambda: resume()),
+                        VOption("2 Main Menu", onselect=lambda: launch()),
+                        VOption("2 Exit", onselect=lambda: sys.exit(0)),
+                    ], position=(35, 20))
+                ],
+                fullscreen=True
+            )
         )
-        self._cache: dict = {}
-        self.states: dict = states
-
-    def control(self, controller: Controller) -> None:
-        actions: list[int] = []
-        self.controller: Controller = controller
-        def toggle() -> None:
-            self.states.update({'pause': not self.states.get('pause')})
-        actions.extend(self.controller.onclick(Controller.ACTION_PAUSE, (toggle, ())))
-        self._cache.update({'controller_actions': actions})
-
-    def OnDestroy(self) -> None:
-        self.controller.destroy(self.actions)
-

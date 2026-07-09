@@ -1,52 +1,34 @@
 import pygame
-from mazegenerator import MazeGenerator
-from src.helpers import Controller
-from src.objects import Canvas, Player, Ghost, Reward
-from src.visualizer import Visualizer, Widget
+from src.parsing import Configuration
+from src.visualizer import Visualizer
 from src.interface import VContainer, VImage, VText
+from src.objects import Canvas, Player, Ghost, Reward
 
 
-class Gameplay(Widget):
-    events: dict = {
-        'OnGameplayEnd': (print, ("game end!",)),
-        'OnPlayerWin': (print, ("You lose :(",)),
-        'OnPlayerLose': (print, ("You lose :(",)),
-        'OnPlayerLoseHeart': (print, ("Lost heart",)),
-    }
-    def __init__(self, controller: Controller, events: dict = {}) -> None:
-        Widget.__init__(self, pygame.Surface((0, 0)))
-        generator = MazeGenerator((18, 12))
-        generator.generate()
-        self.controller: Controller = controller
-        self.states: dict = {
-            'pause': False,
-            'freeze': False,
-            'score': 0,
-            'hearts': 3,
-        }
-        self.visible = lambda: not self.states.get('pause')
-        self.events.update(events)
-        self.canvas: Canvas = Canvas(
-            generator.maze,
-            states=self.states,
-        )
-        self.size = self.canvas.size
-        self.player: Player = Player(
+class Gameplay(VContainer):
+    def __init__(self, config: Configuration) -> None:
+        VContainer.__init__(self, [])
+        self.absolute: bool = True
+        self.config: Configuration = config
+        self.opponents: list[Ghost] = []
+        self.rewards: list[Reward] = []
+        self.states: dict = {}
+        self.canvas = Canvas()
+        self.player = Player(
             canvas=self.canvas,
             states=self.states,
         )
-        self.player.spawn(8, 7)
-        self.player.control(self.controller)
-        self.opponents: list[Ghost] = []
+
+    def reset(self) -> None:
+        self.canvas.generate((18, 12))
+        self.opponents = []
         for index, cell in enumerate([(0, 0), (-1, 0), (0, -1), (8, 5)]):
-            opponent = Ghost(
-                canvas=self.canvas,
-                states=self.states,
-            )
+            opponent: Ghost = Ghost(self.canvas, self.states)
             opponent.type = index
+            opponent.reset()
             opponent.spawn(*cell)
             self.opponents.append(opponent)
-        self.rewards: list[Reward] = []
+        self.rewards.clear()
         rows = len(self.canvas.maze)
         cols = len(self.canvas.maze[0])
         for y in range(rows):
@@ -59,24 +41,27 @@ class Gameplay(Widget):
                 reward: Reward = Reward(self.canvas, special=special)
                 reward.spawn(x, y)
                 self.rewards.append(reward)
+        self.player.reset()
+        self.player.spawn(8, 7)
+        self.states.update({
+            'score': 0,
+            'hearts': 3,
+        })
+        self.elements = [self.canvas, *self.rewards, *self.opponents, self.player]
+        self.adjust()
 
     def render(self, visual: Visualizer) -> None:
-        container_left, container_top = self.position
-        self.canvas.offset = self.position
         self.canvas.render(visual)
         rect_p = self.player.surface.get_rect(topleft=self.player.position)
         for index, reward in enumerate(self.rewards[:]):
-            reward.offset = self.position
             reward.render(visual)
             rect_r = reward.surface.get_rect(topleft=reward.position)
             if rect_r.colliderect(rect_p):
-                reward.OnPlayerClaimReward(self.player)
+                reward.onPlayerClaimReward(self.player)
                 self.rewards.pop(index)
         for opponent in self.opponents:
-            opponent.offset = self.position
             opponent.render(visual)
             rect_o = opponent.surface.get_rect(topleft=opponent.position)
             if rect_o.colliderect(rect_p):
-                opponent.OnPlayerEaten(self.player)
-        self.player.offset = self.position
+                opponent.onPlayerEaten(self.player)
         self.player.render(visual)

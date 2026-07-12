@@ -1,12 +1,13 @@
 {
+    // file of height score.
     "highscore_filename": "",
-    "width": 18,
-    "height": 12,
+    "width": 18, // width
+    "height": 12, /* ... */
     "lives": 3,
-    "pacgum": 42,
+    "pacgum": 42, // another comment here
     "points_per_pacgum": 10,
-    "points_per_super_pacgum": 50,
+    "points_per_super_pacgum": 50, # python comment is working to
     "points_per_ghost": 200,
-    "seed": 42,
+    "seed":/* ... */ 42,
     "level_max_time": 90
 }

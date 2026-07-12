@@ -20,7 +20,7 @@ class Visualizer:
             if hasattr(element, 'onDestroy'):
                 element.onDestroy()
         self.scenes.clear()
-    
+
     def render(self) -> None:
         runtime = True
         clock = pygame.time.Clock()

@@ -57,8 +57,8 @@ class Widget(ABC):
         return self._visible
 
     @visible.setter
-    def visible(self, visible: bool | Callable) -> None:
-        self._visible = visible
+    def visible(self, visibility: bool | Callable) -> None:
+        self._visible = visibility
 
     def render(self, visual: Any) -> None:
         if self.visible:

@@ -1,6 +1,7 @@
 import pygame, sys
 from abc import ABC
 from typing import Callable
+from functools import partial
 from src.visualizer import Visualizer
 from src.interface import VContainer, VImage, VText, VSelect, VOption
 from src.helpers import Widget, Controller
@@ -37,17 +38,20 @@ class MainScreen(Scene):
 
 class GameplayScreen(Scene, Controller):
     def __init__(self, gameplay: Gameplay, pause: Callable) -> None:
+        self.gameplay: Gameplay = gameplay
         screen_w, screen_h = Visualizer.resolution
-        image: Widget = self.image()
-        image.left += (gameplay.width/2) - (image.width/2) - 25
-        image.top -= image.height + 10
-        score: Widget = self.score()
-        score.top -= score.height + 10
+        image: Widget = VImage("assets/images/pac-man-logo.png")
+        image.left += (gameplay.width/2) - (image.width/2)
+        image.padding.update({'bottom': 10})
+        image.top -= image.size[1]
+        score: Widget = VText(lambda: f"Score: {self.gameplay.states.get('score')}")
+        score.padding.update({'bottom': 10})
+        score.top -= score.size[1]
         hearts = self.hearts()
         hearts.top = gameplay.height / 2
+        hearts.padding.update({'top': 10})
         Controller.__init__(self)
         self.onClick(self.ACTION_PAUSE, lambda: pause())
-        self.gameplay: Gameplay = gameplay
         Scene.__init__(self,
             VContainer(
                 [gameplay, score, image, hearts],
@@ -56,21 +60,12 @@ class GameplayScreen(Scene, Controller):
             )
         )
 
-    def image(self) -> Widget:
-        return VImage("assets/images/pac-man-logo.png")
-
-    def score(self) -> Widget:
-        return VText(lambda: f"Score: {self.gameplay.states.get('score')}")
-
     def hearts(self) -> Widget:
         attempts: list[Widget] = []
         for index in range(3):
-            attempts.append(
-                VImage(
-                    "assets/images/player_open.png", size=(40, 40),
-                    visible=lambda: self.gameplay.states.get('hearts') > index
-                )
-            )
+            image: VImage = VImage("assets/images/player_open.png", size=(40, 40))
+            image.visible = partial(lambda index: self.gameplay.states.get('hearts') > index, index)
+            attempts.append(image)
         return VContainer(attempts, inline=True)
 
     def render(self, visual: Visualizer) -> None:
@@ -102,14 +97,17 @@ class LeaderboardScreen(Scene):
         players: list[VText] = []
         for index, record in enumerate([("iandalou", 2100), ("andaloui", 900), ("ismaila", 800)]):
             player, score = record
-            players.append(VText(f"{index + 1}. {player} - {score} pts"))
+            text: VText = VText(f"{index + 1}. {player} - {score} pts")
+            text.padding.update({'top': 7, 'bottom': 7})
+            players.append(text)
+
         Scene.__init__(self,
             VContainer(
                 [
                     image,
                     *players,
                     VSelect([
-                        VOption("Back", onselect=lambda: sys.exit(0)),
+                        VOption("Back", onselect=lambda: back()),
                     ], position=(0, 35), inline=True)
                 ],
                 fullscreen=True

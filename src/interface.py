@@ -19,7 +19,6 @@ class VText(Widget):
     def __init__(self, content: str | Callable, position: tuple[int, int] = (0, 0), color: tuple[int, int, int] = (255, 255, 255)) -> None:
         self.font = pygame.font.Font("assets/fonts/PressStart2P-Regular.ttf", 28)
         super().__init__(self.font.render("", True, color), position)
-        self.padding.update({'top': 7, 'bottom': 7})
         self.color: tuple[int, int, int] = color
         self.content: str | Callable = content
 

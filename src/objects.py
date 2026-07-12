@@ -27,7 +27,7 @@ class Reward(Widget, Playable):
 
     def onPlayerClaimReward(self, player: Any) -> None:
         if self.special:
-            pygame.mixer.Sound("assets/audios/coin.mp3").play()
+            Audio.coin()
         score: int = 2000 if self.special else 100
         player.states.update({'score': player.states.get('score') + score})
 
@@ -97,6 +97,7 @@ class Ghost(Widget, Playable):
     def __init__(self, canvas: Any, states: dict = {}) -> None:
         Widget.__init__(self, pygame.Surface((0, 0)))
         Playable.__init__(self, canvas, states)
+        self.init_cell: tuple[int, int] = (0, 0)
         self.padding.update({'left': 15, 'bottom': 15, 'right': 15, 'top': 15})
         self.speed: float = 1.3
         self.type: int = 0
@@ -134,7 +135,7 @@ class Ghost(Widget, Playable):
     def onPlayerEaten(self, player: Playable) -> None:
         self.states.update({'hearts': self.states.get('hearts') - 1})
         player.onPlayerDead(self)
-        self.spawn(0, 0)
+        self.spawn(*self.init_cell)
 
     def render(self, visual: Visualizer) -> None:
         self.thread()

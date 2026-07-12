@@ -22,11 +22,12 @@ class Gameplay(VContainer):
     def reset(self) -> None:
         self.canvas.generate((18, 12))
         self.opponents = []
-        for index, cell in enumerate([(0, 0), (-1, 0), (0, -1), (8, 5)]):
+        for index, cell in enumerate([(0, 0), (-1, 0), (0, -1), (-1, -1)]):
             opponent: Ghost = Ghost(self.canvas, self.states)
             opponent.type = index
             opponent.reset()
             opponent.spawn(*cell)
+            opponent.init_cell = cell
             self.opponents.append(opponent)
         self.rewards.clear()
         rows = len(self.canvas.maze)
@@ -36,7 +37,9 @@ class Gameplay(VContainer):
                 if self.canvas.maze[y][x] == 15:
                     continue
                 special: bool = False
-                if (x, y) in [(1, 1), (cols - 1, rows - 1)]:
+                if (x, y) in [(0, 0), (cols - 1, rows - 1)]:
+                    special = True
+                if (x, y) in [(cols - 1, 0), (0, rows - 1)]:
                     special = True
                 reward: Reward = Reward(self.canvas, special=special)
                 reward.spawn(x, y)

@@ -4,6 +4,7 @@ from src.parsing import Configuration
 from src.visualizer import Visualizer
 from src.interface import VContainer, VImage, VText
 from src.objects import Canvas, Player, Ghost, Reward
+from src.helpers import Audio
 
 
 class Gameplay(VContainer):
@@ -29,6 +30,10 @@ class Gameplay(VContainer):
         self.states.update({'expired_at': time() + 90})
 
     def onPlayerEaten(self, player: Player, opponent: Ghost) -> None:
+        if opponent.scared_at + 15 > time():
+            self.states.update({'score': self.states.get('score') + 500})
+            opponent.spawn(*opponent.init_cell)
+            return None
         self.states.update({'hearts': self.states.get('hearts') - 1})
         self.states.update({'freeze': True})
         if self.states.get('hearts') <= 0:
@@ -37,6 +42,15 @@ class Gameplay(VContainer):
         self.states.update({'freeze': False})
         player.spawn(8, 7)
         opponent.spawn(*opponent.init_cell)
+
+    def onPlayerClaimReward(self, player: Player, reward: Reward) -> None:
+        score: int = 100
+        if reward.special:
+            score = 1000
+            Audio.coin()
+            for opponent in self.opponents:
+                opponent.scared_at = time()
+        self.states.update({'score': self.states.get('score') + score})
 
     def reset(self) -> None:
         self.canvas.generate((18, 12))
@@ -83,7 +97,7 @@ class Gameplay(VContainer):
             reward.render(visual)
             rect_r = reward.surface.get_rect(topleft=reward.position)
             if rect_r.colliderect(rect_p):
-                reward.onPlayerClaimReward(self.player)
+                self.onPlayerClaimReward(self.player, reward)
                 self.rewards.pop(index)
         for opponent in self.opponents:
             opponent.render(visual)

@@ -1,9 +1,10 @@
 import pygame, random, os
+from time import time
 from typing import Any, Callable
 from mazegenerator import MazeGenerator
 from src.parsing import Configuration
 from src.visualizer import Visualizer
-from src.helpers import Widget, Playable, Controller, Audio
+from src.helpers import Widget, Playable, Controller
 
 
 class Reward(Widget, Playable):
@@ -24,12 +25,6 @@ class Reward(Widget, Playable):
             'right': 15 if self.special else 22,
             'top': 15 if self.special else 22
         })
-
-    def onPlayerClaimReward(self, player: Any) -> None:
-        if self.special:
-            Audio.coin()
-        score: int = 2000 if self.special else 100
-        player.states.update({'score': player.states.get('score') + score})
 
 
 class Player(Widget, Playable, Controller):
@@ -86,10 +81,12 @@ class Ghost(Widget, Playable):
         "assets/images/ghost_green.png",
         "assets/images/ghost_pink.png",
         "assets/images/ghost_red.png",
+        "assets/images/enemy_fear_white.png",
     ]
     def __init__(self, canvas: Any, states: dict = {}) -> None:
         Widget.__init__(self, pygame.Surface((0, 0)))
         Playable.__init__(self, canvas, states)
+        self.scared_at: float = 0.0
         self.init_cell: tuple[int, int] = (0, 0)
         self.padding.update({'left': 15, 'bottom': 15, 'right': 15, 'top': 15})
         self.type: int = 0
@@ -97,6 +94,8 @@ class Ghost(Widget, Playable):
     @property
     def surface(self) -> pygame.Surface:
         surface = pygame.image.load(self.textures[self.type]).convert_alpha()
+        if self.scared_at + 15 > time():
+            surface = pygame.image.load(self.textures[-1]).convert_alpha()
         return pygame.transform.smoothscale(surface, (35, 35))
 
     def behaviour(self):

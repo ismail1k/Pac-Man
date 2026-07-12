@@ -4,7 +4,7 @@ from typing import Callable
 from functools import partial
 from src.visualizer import Visualizer
 from src.interface import VContainer, VImage, VText, VSelect, VOption
-from src.helpers import Widget, Controller
+from src.helpers import Widget, Controller, Audio
 from src.playground import Gameplay
 
 
@@ -23,8 +23,7 @@ class MainScreen(Scene):
         leaderboard: Callable,
         instructions: Callable,
         ) -> None:
-        pygame.mixer.music.load("assets/audios/menu.mp3")
-        pygame.mixer.music.play(-1)
+        Audio.menu()
         super().__init__(
             VContainer([
                 VImage("assets/images/pac-man-logo.png", size=(289 * 2, 70 * 2)),
@@ -54,9 +53,7 @@ class GameplayScreen(Scene, Controller):
         hearts = self._hearts()
         hearts.top = gameplay.height / 2
         hearts.padding.update({'top': 10})
-        pygame.mixer.music.load("assets/audios/music.mp3")
-        pygame.mixer.music.set_volume(0.3)
-        pygame.mixer.music.play(-1)
+        Audio.music()
         Scene.__init__(self,
             VContainer(
                 [gameplay, score, image, hearts],

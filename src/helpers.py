@@ -174,3 +174,29 @@ class Controller(ABC):
             self.__events = list(filter(condition, self.__events))
         else:
             self.__events.clear()
+
+
+class Audio:
+    _song: str | None = None
+
+    @staticmethod
+    def play(song: str) -> None:
+        Audio._song = song
+        pygame.mixer.music.load(song)
+        pygame.mixer.music.play(-1)
+
+    @staticmethod
+    def volume(level: float = 1.0) -> None:
+        pygame.mixer.music.set_volume(level)
+
+    @staticmethod
+    def menu(song: str = "assets/audios/menu.mp3") -> None:
+        if Audio._song != song:
+            Audio.play(song)
+            Audio.volume(1.0)
+
+    @staticmethod
+    def music(song: str = "assets/audios/music.mp3") -> None:
+        if Audio._song != song:
+            Audio.play(song)
+            Audio.volume(0.3)

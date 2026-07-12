@@ -204,5 +204,4 @@ class Audio:
     @staticmethod
     def coin(song: str = "assets/audios/coin.mp3") -> None:
         if Audio._song != song:
-            Audio.play(song)
-            Audio.volume(1.0)
+            pygame.mixer.Sound(song).play()

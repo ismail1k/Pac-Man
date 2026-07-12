@@ -3,7 +3,7 @@ from typing import Any, Callable
 from mazegenerator import MazeGenerator
 from src.parsing import Configuration
 from src.visualizer import Visualizer
-from src.helpers import Widget, Playable, Controller
+from src.helpers import Widget, Playable, Controller, Audio
 
 
 class Reward(Widget, Playable):

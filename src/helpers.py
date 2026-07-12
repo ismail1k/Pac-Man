@@ -70,7 +70,7 @@ class Playable(ABC):
         self.canvas: Any = canvas
         self.states: dict = states
         self.cell: tuple[int, int] = (0, 0)
-        self.speed: float = 2
+        self.speed: float = 1.3
         self.direction: str = ''
         self._cache: dict = {}
 

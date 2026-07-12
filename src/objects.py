@@ -1,4 +1,4 @@
-import pygame, random, time, os
+import pygame, random, os
 from typing import Any, Callable
 from mazegenerator import MazeGenerator
 from src.parsing import Configuration
@@ -46,6 +46,7 @@ class Player(Widget, Playable, Controller):
         self.onClick(self.ACTION_LEFT, lambda: self._cache.update({'direction': "W"}))
         self.onClick(self.ACTION_RIGHT, lambda: self._cache.update({'direction': "E"}))
         self.padding.update({'left': 15, 'bottom': 15, 'right': 15, 'top': 15})
+        self.speed: float = 2.0
 
     @property
     def surface(self) -> pygame.Surface:
@@ -70,14 +71,6 @@ class Player(Widget, Playable, Controller):
         surface = pygame.transform.flip(surface, False, flip)
         return pygame.transform.rotate(surface, angle)
 
-    def onPlayerDead(self, opponent: Playable) -> None:
-        self.states.update({'freeze': True})
-        if self.states.get('hearts') <= 0:
-            return None
-        time.sleep(2)
-        self.states.update({'freeze': False})
-        self.spawn(8, 7)
-
     def onDestroy(self) -> None:
         self.destroyControllerEvents()
 
@@ -99,7 +92,6 @@ class Ghost(Widget, Playable):
         Playable.__init__(self, canvas, states)
         self.init_cell: tuple[int, int] = (0, 0)
         self.padding.update({'left': 15, 'bottom': 15, 'right': 15, 'top': 15})
-        self.speed: float = 1.3
         self.type: int = 0
 
     @property
@@ -131,11 +123,6 @@ class Ghost(Widget, Playable):
             self._cache["direction"] = reverse(self.direction)
         else:
             self._cache["direction"] = ""
-
-    def onPlayerEaten(self, player: Playable) -> None:
-        self.states.update({'hearts': self.states.get('hearts') - 1})
-        player.onPlayerDead(self)
-        self.spawn(*self.init_cell)
 
     def render(self, visual: Visualizer) -> None:
         self.thread()
@@ -205,7 +192,7 @@ class Canvas(Widget):
         return surface
 
     def generate(self, size: tuple[int, int]) -> None:
-        generator = MazeGenerator((18, 12))
+        generator = MazeGenerator(size)
         generator.generate()
         self.maze = generator.maze
         self.size = (

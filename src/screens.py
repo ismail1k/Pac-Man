@@ -1,5 +1,6 @@
 import pygame, sys
 from abc import ABC
+from time import time
 from typing import Callable
 from functools import partial
 from src.visualizer import Visualizer
@@ -53,10 +54,18 @@ class GameplayScreen(Scene, Controller):
         hearts = self._hearts()
         hearts.top = gameplay.height / 2
         hearts.padding.update({'top': 10})
+        timer: VText = VText(lambda: f"{int(self.gameplay.states.get('expired_at', time()) - time())} second(s)")
+        timer.top = gameplay.height
+        timer.left += gameplay.width - timer.width
+        timer.padding.update({'top': 10})
+        level: VText = VText(lambda: f"Level: {self.gameplay.states.get('level')}/10")
+        level.padding.update({'bottom': 10})
+        level.top -= level.size[1]
+        level.left += gameplay.width - level.width
         Audio.music()
         Scene.__init__(self,
             VContainer(
-                [gameplay, score, image, hearts],
+                [gameplay, score, image, hearts, timer, level],
                 fullscreen=True,
                 absolute=True,
             )

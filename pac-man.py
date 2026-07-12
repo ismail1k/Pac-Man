@@ -26,6 +26,7 @@ class Pacman:
 
     def play(self) -> None:
         self.gameplay.reset()
+        self.gameplay.onGameEnd = self.launch
         self.visual.clear()
         self.visual.scenes.append(
             GameplayScreen(self.gameplay, pause=self.pause)

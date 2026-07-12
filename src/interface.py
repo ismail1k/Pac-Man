@@ -17,16 +17,23 @@ class VImage(Widget):
 
 class VText(Widget):
     def __init__(self, content: str | Callable, position: tuple[int, int] = (0, 0), color: tuple[int, int, int] = (255, 255, 255)) -> None:
+        self._content: str | Callable = content
         self.font = pygame.font.Font("assets/fonts/PressStart2P-Regular.ttf", 28)
-        super().__init__(self.font.render("", True, color), position)
+        super().__init__(self.font.render(self.content, True, color), position)
         self.color: tuple[int, int, int] = color
-        self.content: str | Callable = content
+        
+    @property
+    def content(self) -> bool:
+        if isinstance(self._content, Callable):
+            return self._content()
+        return self._content
+
+    @content.setter
+    def content(self, content: bool | Callable) -> None:
+        self._content = content
 
     def render(self, visual: Any) -> None:
-        if isinstance(self.content, str):
-            self.surface = self.font.render(self.content, True, self.color)
-        if isinstance(self.content, Callable):
-            self.surface = self.font.render(self.content(), True, self.color)
+        self.surface = self.font.render(self.content, True, self.color)
         visual.screen.blit(self.surface, self.position)
 
 

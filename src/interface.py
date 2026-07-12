@@ -31,73 +31,71 @@ class VText(Widget):
         visual.screen.blit(self.surface, self.position)
 
 
-class VButton(Widget):
-    def __init__(self, label: str, position: tuple[int, int] = (0, 0)) -> None:
-        font = pygame.font.Font("assets/fonts/PressStart2P-Regular.ttf", 24)
-        super().__init__(font.render(label, True, (255, 255, 255)), position)
-
-
-class VBlock(Widget):
-    def __init__(self, size: tuple[int, int], position: tuple[int, int] = (0, 0)) -> None:
-        super().__init__(pygame.Surface(size), position)
-
-
 class VOption(Widget):
     def __init__(self, label: str, onselect: Callable, position: tuple[int, int] = (0, 0)) -> None:
-        self.text = VText(label, color=(255, 255, 255))
-        super().__init__(self.text.surface, position)
-        self.padding = self.text.padding
-        self.padding.update({'left': 5, 'right': 5})
+        self.font = pygame.font.Font("assets/fonts/PressStart2P-Regular.ttf", 28)
+        super().__init__(self.font.render(label, True, (255, 255, 255)), position)
+        self.label: str = label
         self.onselect: Callable = onselect
         self.focus: bool = False
+        self.padding.update({'top': 7, 'bottom': 7})
 
     def render(self, visual: Any) -> None:
-        self.text.color = (255, 255, 255)
+        color: tuple[int, int, int] = (255, 255, 255)
         if self.focus:
-            self.text.color = (255, 0, 0)
-        self.text.surface = self.text.font.render(self.text.content, True, self.text.color)
-        visual.screen.blit(self.text.surface, self.position)
+            color: tuple[int, int, int] = (255, 0, 0)
+        visual.screen.blit(self.font.render(self.label, True, color), self.position)
 
 
 class VSelect(Widget, Controller):
-    def __init__(self, options: list[VOption], position: tuple[int, int] = (0, 0), visible: bool | Callable = True) -> None:
+    def __init__(self, options: list[VOption], position: tuple[int, int] = (0, 0), visible: bool | Callable = True, inline: bool = False) -> None:
         Widget.__init__(self, pygame.Surface((0, 0)), position)
         Controller.__init__(self)
-        self.options: list[VOption] = []
+        self.options: list[VOption] = options
         self.visible: bool | Callable = visible
+        self.inline: bool = inline
         self.focus: int = 0
-        for option in options:
-            option.offset_x = self.offset_x + self.left
-            option.offset_y = self.offset_y + self.top
-            option_w, option_h = option.size
-            if self.width < option_w:
-                self.width = option_w
-            self.height += option_h
-            self.options.append(option)
-        self.size = (self.width, self.height)
+        self.adjust()
         self.controller()
 
+    def adjust(self) -> None:
+        offset_x, offset_y = self.position
+        for option in self.options:
+            option.offset_x = offset_x
+            option.offset_y = offset_y
+            option_width, option_height = option.size
+            if self.inline:
+                offset_x += option_width
+                self.width += option_width
+                if self.height < option_height:
+                    self.height = option_height
+            else:
+                offset_y += option_height
+                self.height += option_height
+                if self.width < option_width:
+                    self.width = option_width
+
     def controller(self) -> None:
-        def up() -> None:
+        def next() -> None:
             if self.focus > 0:
                 self.focus -= 1
-        def down() -> None:
+        def previous() -> None:
             if self.focus < len(self.options) - 1:
                 self.focus += 1
         def select() -> None:
             self.options[self.focus].onselect()
 
-        self.onClick(self.ACTION_UP, lambda: up())
-        self.onClick(self.ACTION_DOWN, lambda: down())
+        if self.inline:
+            self.onClick(self.ACTION_LEFT, lambda: next())
+            self.onClick(self.ACTION_RIGHT, lambda: previous())
+        else:
+            self.onClick(self.ACTION_UP, lambda: next())
+            self.onClick(self.ACTION_DOWN, lambda: previous())
         self.onClick(self.ACTION_CONFIRM, lambda: select())
 
     def render(self, visual: Any) -> None:
         self.listenControllerEvents(visual.events)
-        offset_x, offset_y = (self.offset_x, self.offset_y)
         for index, option in enumerate(self.options):
-            option.offset_x = offset_x + self.left
-            option.offset_y = offset_y + self.top
-            offset_y += option.size[1]
             option.focus = False
             if self.focus == index:
                 option.focus = True
@@ -149,7 +147,7 @@ class VContainer(Widget):
         for element in self.elements:
             element.offset_x += self.left
             element.offset_y += self.top
-            if isinstance(element, VContainer):
+            if hasattr(element, 'adjust'):
                 element.adjust()
 
     def render(self, visual: Any) -> None:

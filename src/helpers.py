@@ -7,11 +7,11 @@ from typing import Any, Callable
 class Widget(ABC):
     def __init__(self, surface: pygame.Surface, position: tuple[int, int] = (0, 0), offset: tuple[int, int] = (0, 0)) -> None:
         self._surface: pygame.Surface = surface
+        self._visible: bool | Callable = True
         self.left, self.top = position
         self.width, self.height = surface.get_size()
         self.offset_x, self.offset_y = offset
         self.padding: dict = {'left': 0, 'bottom': 0, 'right': 0, 'top': 0}
-        self._visible: bool | Callable = True
 
     @property
     def surface(self) -> pygame.Surface:
@@ -19,6 +19,7 @@ class Widget(ABC):
 
     @surface.setter
     def surface(self, surface: pygame.Surface) -> None:
+        self.width, self.height = surface.get_size()
         self._surface = surface
 
     @property

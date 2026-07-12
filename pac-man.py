@@ -3,7 +3,7 @@ from src.exceptions import ParsingException
 from src.parsing import Configuration
 from src.visualizer import Visualizer
 from src.interface import VContainer, VImage, VText, VSelect, VOption
-from src.screens import MainScreen, GameplayScreen, PauseScreen
+from src.screens import MainScreen, GameplayScreen, PauseScreen, LeaderboardScreen
 from src.playground import Gameplay
 
 
@@ -33,6 +33,9 @@ class Pacman:
 
     def leaderboard(self) -> None:
         self.visual.clear()
+        self.visual.scenes.append(
+            LeaderboardScreen(back=self.launch)
+        )
 
     def instructions(self) -> None:
         self.visual.clear()

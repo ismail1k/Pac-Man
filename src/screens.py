@@ -93,3 +93,25 @@ class PauseScreen(Scene):
                 fullscreen=True
             )
         )
+
+
+class LeaderboardScreen(Scene):
+    def __init__(self, back: Callable) -> None:
+        image: VImage = VImage("assets/images/pac-man-logo.png", size=(289 * 2, 70 * 2))
+        image.padding['bottom'] = 35
+        players: list[VText] = []
+        for index, record in enumerate([("iandalou", 2100), ("andaloui", 900), ("ismaila", 800)]):
+            player, score = record
+            players.append(VText(f"{index + 1}. {player} - {score} pts"))
+        Scene.__init__(self,
+            VContainer(
+                [
+                    image,
+                    *players,
+                    VSelect([
+                        VOption("Back", onselect=lambda: sys.exit(0)),
+                    ], position=(0, 35), inline=True)
+                ],
+                fullscreen=True
+            )
+        )

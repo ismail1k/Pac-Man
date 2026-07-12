@@ -23,6 +23,8 @@ class MainScreen(Scene):
         leaderboard: Callable,
         instructions: Callable,
         ) -> None:
+        pygame.mixer.music.load("assets/audios/menu.mp3")
+        pygame.mixer.music.play(-1)
         super().__init__(
             VContainer([
                 VImage("assets/images/pac-man-logo.png", size=(289 * 2, 70 * 2)),
@@ -38,7 +40,9 @@ class MainScreen(Scene):
 
 class GameplayScreen(Scene, Controller):
     def __init__(self, gameplay: Gameplay, pause: Callable) -> None:
+        Controller.__init__(self)
         self.gameplay: Gameplay = gameplay
+        self.onClick(self.ACTION_PAUSE, lambda: pause())
         screen_w, screen_h = Visualizer.resolution
         image: Widget = VImage("assets/images/pac-man-logo.png")
         image.left += (gameplay.width/2) - (image.width/2)
@@ -47,11 +51,12 @@ class GameplayScreen(Scene, Controller):
         score: Widget = VText(lambda: f"Score: {self.gameplay.states.get('score')}")
         score.padding.update({'bottom': 10})
         score.top -= score.size[1]
-        hearts = self.hearts()
+        hearts = self._hearts()
         hearts.top = gameplay.height / 2
         hearts.padding.update({'top': 10})
-        Controller.__init__(self)
-        self.onClick(self.ACTION_PAUSE, lambda: pause())
+        pygame.mixer.music.load("assets/audios/music.mp3")
+        pygame.mixer.music.set_volume(0.3)
+        pygame.mixer.music.play(-1)
         Scene.__init__(self,
             VContainer(
                 [gameplay, score, image, hearts],
@@ -60,7 +65,7 @@ class GameplayScreen(Scene, Controller):
             )
         )
 
-    def hearts(self) -> Widget:
+    def _hearts(self) -> Widget:
         attempts: list[Widget] = []
         for index in range(3):
             image: VImage = VImage("assets/images/player_open.png", size=(40, 40))
@@ -100,7 +105,6 @@ class LeaderboardScreen(Scene):
             text: VText = VText(f"{index + 1}. {player} - {score} pts")
             text.padding.update({'top': 7, 'bottom': 7})
             players.append(text)
-
         Scene.__init__(self,
             VContainer(
                 [

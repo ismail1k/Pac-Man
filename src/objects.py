@@ -26,6 +26,8 @@ class Reward(Widget, Playable):
         })
 
     def onPlayerClaimReward(self, player: Any) -> None:
+        if self.special:
+            pygame.mixer.Sound("assets/audios/coin.mp3").play()
         score: int = 2000 if self.special else 100
         player.states.update({'score': player.states.get('score') + score})
 
@@ -70,15 +72,11 @@ class Player(Widget, Playable, Controller):
 
     def onPlayerDead(self, opponent: Playable) -> None:
         self.states.update({'freeze': True})
-        self.states.update({'hearts': self.states.get('hearts') - 1})
         if self.states.get('hearts') <= 0:
             return None
         time.sleep(2)
-        self.direction = ''
-        self._cache.update({'direction': ''})
-        opponent.spawn(0, 0)
-        self.spawn(8, 7)
         self.states.update({'freeze': False})
+        self.spawn(8, 7)
 
     def onDestroy(self) -> None:
         self.destroyControllerEvents()
@@ -134,7 +132,9 @@ class Ghost(Widget, Playable):
             self._cache["direction"] = ""
 
     def onPlayerEaten(self, player: Playable) -> None:
+        self.states.update({'hearts': self.states.get('hearts') - 1})
         player.onPlayerDead(self)
+        self.spawn(0, 0)
 
     def render(self, visual: Visualizer) -> None:
         self.thread()

@@ -1,4 +1,5 @@
 import pygame
+from random import random
 from time import time, sleep
 from src.parsing import Configuration
 from src.visualizer import Visualizer
@@ -8,11 +9,10 @@ from src.helpers import Audio
 
 
 class Gameplay(VContainer):
-    def __init__(self, config: Configuration) -> None:
+    def __init__(self) -> None:
         VContainer.__init__(self, [])
         self.onGameEnd: Callable = lambda: None
         self.absolute: bool = True
-        self.config: Configuration = config
         self.opponents: list[Ghost] = []
         self.rewards: list[Reward] = []
         self.states: dict = {}
@@ -26,13 +26,16 @@ class Gameplay(VContainer):
         level: int = self.states.get('level')
         if level >= 10:
             self.onGameEnd()
+        self.reset()
         self.states.update({'level': level + 1})
-        self.states.update({'expired_at': time() + 90})
+        self.states.update({'expired_at': time() + Configuration.get('level_max_time', 60)})
 
     def onPlayerEaten(self, player: Player, opponent: Ghost) -> None:
         if opponent.scared_at + 15 > time():
-            self.states.update({'score': self.states.get('score') + 500})
-            opponent.spawn(*opponent.init_cell)
+            cooldown: int = int(abs(time() - opponent.scared_at - 15))
+            self.states.update({'score': self.states.get('score') + Configuration.get('points_per_ghost', 100)})
+            opponent.dispawn()
+            opponent.spawn(*opponent.init_cell, cooldown)
             return None
         self.states.update({'hearts': self.states.get('hearts') - 1})
         self.states.update({'freeze': True})
@@ -40,20 +43,26 @@ class Gameplay(VContainer):
             return self.onGameEnd()
         sleep(1.5)
         self.states.update({'freeze': False})
-        player.spawn(8, 7)
+        player.spawn()
         opponent.spawn(*opponent.init_cell)
 
     def onPlayerClaimReward(self, player: Player, reward: Reward) -> None:
-        score: int = 100
+        score: int = Configuration.get('points_per_pacgum', 5)
         if reward.special:
-            score = 1000
+            score = Configuration.get('points_per_super_pacgum', 25)
             Audio.coin()
             for opponent in self.opponents:
                 opponent.scared_at = time()
         self.states.update({'score': self.states.get('score') + score})
 
     def reset(self) -> None:
-        self.canvas.generate((18, 12))
+        self.canvas.generate(
+            size=(
+                Configuration.get('width', 18),
+                Configuration.get('height', 12)
+            ),
+            seed=Configuration.get('seed', random())
+        )
         self.opponents = []
         for index, cell in enumerate([(0, 0), (-1, 0), (0, -1), (-1, -1)]):
             opponent: Ghost = Ghost(self.canvas, self.states)
@@ -78,13 +87,7 @@ class Gameplay(VContainer):
                 reward.spawn(x, y)
                 self.rewards.append(reward)
         self.player.reset()
-        self.player.spawn(8, 7)
-        self.states.update({
-            'level': 1,
-            'score': 0,
-            'hearts': 3,
-            'expired_at': time() + 90,
-        })
+        self.player.spawn()
         self.elements = [self.canvas, *self.rewards, *self.opponents, self.player]
         self.adjust()
 

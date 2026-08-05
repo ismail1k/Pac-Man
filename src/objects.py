@@ -72,7 +72,8 @@ class Player(Widget, Playable, Controller):
     def render(self, visual: Visualizer) -> None:
         self.listenControllerEvents(visual.events)
         self.thread()
-        visual.screen.blit(self.surface, self.position)
+        if self.visible:
+            visual.screen.blit(self.surface, self.position)
 
 
 class Ghost(Widget, Playable):
@@ -95,7 +96,11 @@ class Ghost(Widget, Playable):
     def surface(self) -> pygame.Surface:
         surface = pygame.image.load(self.textures[self.type]).convert_alpha()
         if self.scared_at + 15 > time():
+            cooldown = int(abs(time() - self.scared_at - 15))
             surface = pygame.image.load(self.textures[-1]).convert_alpha()
+            if cooldown <= 5:
+                if cooldown % 2 == 0:
+                    surface = pygame.image.load(self.textures[self.type]).convert_alpha()
         return pygame.transform.smoothscale(surface, (35, 35))
 
     def behaviour(self):
@@ -125,7 +130,8 @@ class Ghost(Widget, Playable):
 
     def render(self, visual: Visualizer) -> None:
         self.thread()
-        visual.screen.blit(self.surface, self.position)
+        if self.visible:
+            visual.screen.blit(self.surface, self.position)
 
 
 class Canvas(Widget):
@@ -190,9 +196,8 @@ class Canvas(Widget):
                     surface.blit(tile, pos)
         return surface
 
-    def generate(self, size: tuple[int, int]) -> None:
-        generator = MazeGenerator(size)
-        generator.generate()
+    def generate(self, size: tuple[int, int], seed: int = 42) -> None:
+        generator = MazeGenerator(size=size, seed=seed)
         self.maze = generator.maze
         self.size = (
             (len(self.maze[0]) * self.cell_size) + self.thickness,

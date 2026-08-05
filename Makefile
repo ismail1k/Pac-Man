@@ -1,17 +1,21 @@
+export PIP_CACHE_DIR=/tmp/iandalou/cache
+
+PYTHON = python3.10
+
 install:
-	pip install flake8 mypy pygame
-	pip install assets/resources/mazegenerator-00001-py3-none-any.whl
+	$(PYTHON) -m pip install flake8 mypy pygame
+	$(PYTHON) -m pip install assets/resources/mazegenerator-00001-py3-none-any.whl
 
 run:
-	python3 pac-man.py config.json
+	$(PYTHON) pac-man.py config.json
 	
 clean:
-	rm -rf .mypy_cache src/__pycache__
-	pip uninstall mazegenerator
+	$(PYTHON) -m pip uninstall mazegenerator
+	rm -rf .mypy_cache src/__pycache__ $(PIP_CACHE_DIR)
 
 debug:
-	python3 -m pdb pac-man.py config.json
+	$(PYTHON) -m pdb pac-man.py config.json
 
 lint:
-	flake8 .
-	mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+	$(PYTHON) -m flake8 .
+	$(PYTHON) -m mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs

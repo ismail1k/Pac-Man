@@ -1,4 +1,5 @@
 import sys
+from time import time
 from src.exceptions import ParsingException
 from src.parsing import Configuration
 from src.visualizer import Visualizer
@@ -9,10 +10,9 @@ from src.playground import Gameplay
 
 class Pacman:
     def __init__(self) -> None:
-        self.config: Configuration = Configuration()
-        self.config.loadJSONFile(sys.argv[1])
-        self.visual: Visualizer = Visualizer(self.config)
-        self.gameplay: Gameplay = Gameplay(self.config)
+        Configuration.loadJSONFile(sys.argv[1])
+        self.visual: Visualizer = Visualizer()
+        self.gameplay: Gameplay = Gameplay()
 
     def launch(self) -> None:
         self.visual.clear()
@@ -27,6 +27,12 @@ class Pacman:
     def play(self) -> None:
         self.gameplay.reset()
         self.gameplay.onGameEnd = self.launch
+        self.gameplay.states.update({
+            'level': 1,
+            'score': 0,
+            'hearts': Configuration.get('lives', 3),
+            'expired_at': time() + Configuration.get('level_max_time', 60),
+        })
         self.visual.clear()
         self.visual.scenes.append(
             GameplayScreen(self.gameplay, pause=self.pause)
@@ -61,7 +67,6 @@ if __name__ == '__main__':
     try:
         # sys.setrecursionlimit(8000)
         platform = Pacman()
-        platform.config.validate()
         platform.launch()
         platform.visual.render()
     except ParsingException as exception:

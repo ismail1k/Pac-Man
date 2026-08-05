@@ -5,6 +5,7 @@ from typing import Callable
 from functools import partial
 from src.visualizer import Visualizer
 from src.interface import VContainer, VImage, VText, VSelect, VOption
+from src.parsing import Configuration
 from src.helpers import Widget, Controller, Audio
 from src.playground import Gameplay
 
@@ -73,7 +74,7 @@ class GameplayScreen(Scene, Controller):
 
     def _hearts(self) -> Widget:
         attempts: list[Widget] = []
-        for index in range(3):
+        for index in range(Configuration.get('lives', 3)):
             image: VImage = VImage("assets/images/player_open.png", size=(40, 40))
             image.visible = partial(lambda index: self.gameplay.states.get('hearts') > index, index)
             attempts.append(image)

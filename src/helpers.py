@@ -2,6 +2,8 @@ import pygame
 from abc import ABC
 from functools import wraps
 from typing import Any, Callable
+from threading import Timer
+from src.parsing import Configuration
 
 
 class Widget(ABC):
@@ -69,6 +71,7 @@ class Playable(ABC):
     def __init__(self, canvas: Any, states: dict = {}) -> None:
         self.canvas: Any = canvas
         self.states: dict = states
+        self.visible: bool = False
         self.cell: tuple[int, int] = (0, 0)
         self.speed: float = 1.3
         self.direction: str = ''
@@ -78,7 +81,7 @@ class Playable(ABC):
         self._cache = {}
 
     def thread(self) -> None:
-        if self.states.get('pause') or self.states.get('freeze'):
+        if not self.visible or self.states.get('pause') or self.states.get('freeze'):
             return None
         if self.direction:
             target = self.canvas.navigate(self.cell, self.direction)
@@ -118,16 +121,30 @@ class Playable(ABC):
             if direction and not target:
                 self._cache.update({'direction': ''})
 
-    def spawn(self, cell_left: int, cell_top: int) -> None:
+    def spawn(self, cell_left: int | None = None, cell_top: int | None = None, delay: int = 0) -> None:
         from src.playground import Canvas
+        def _spawn(x: int, y: int) -> None:
+            self.direction = ""
+            self.cell = (x, y)
+            self.position = self.canvas.CellToPosition(self.cell)
+            self.visible: bool = True
 
+        if cell_left is None:
+            cell_left = int((Configuration.get('width', 18) / 2) - 0.5)
+        if cell_top is None:
+            cell_top = int((Configuration.get('height', 12) / 2) - 0.5)
         if cell_left < 0:
             cell_left = len(self.canvas.maze[0]) - 1
         if cell_top < 0:
             cell_top = len(self.canvas.maze) - 1
-        self.direction = ""
-        self.cell = (cell_left, cell_top)
-        self.position = self.canvas.CellToPosition(self.cell)
+        if delay == 0:
+            return _spawn(cell_left, cell_top)
+        Timer(delay, _spawn, args=(cell_left, cell_top)).start()
+
+    def dispawn(self) -> None:
+        self.visible: bool = False
+        self.cell = (-1, -1)
+        self.position = (-1, -1)
 
 
 class Controller(ABC):

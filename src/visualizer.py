@@ -8,7 +8,7 @@ class Visualizer:
     framerate: int = 60
     resolution: tuple = (1920, 1080)
 
-    def __init__(self, config: Configuration) -> None:
+    def __init__(self) -> None:
         pygame.init()
         info = pygame.display.Info()
         Visualizer.resolution = (info.current_w, info.current_h)

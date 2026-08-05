@@ -1,7 +1,7 @@
 import sys
 from time import time
 from src.exceptions import ParsingException
-from src.parsing import Configuration
+from src.parsing import Configuration, Leaderboard
 from src.visualizer import Visualizer
 from src.interface import VContainer, VImage, VText, VSelect, VOption
 from src.screens import MainScreen, GameplayScreen, PauseScreen, LeaderboardScreen
@@ -11,6 +11,7 @@ from src.playground import Gameplay
 class Pacman:
     def __init__(self) -> None:
         Configuration.loadJSONFile(sys.argv[1])
+        Leaderboard.loadJSONFile(Configuration.get('highscore_filename', 'highscore.json'))
         self.visual: Visualizer = Visualizer()
         self.gameplay: Gameplay = Gameplay()
 
@@ -25,14 +26,14 @@ class Pacman:
         )
 
     def play(self) -> None:
-        self.gameplay.reset()
-        self.gameplay.onGameEnd = self.launch
         self.gameplay.states.update({
             'level': 1,
             'score': 0,
             'hearts': Configuration.get('lives', 3),
             'expired_at': time() + Configuration.get('level_max_time', 60),
         })
+        self.gameplay.onGameEnd = self.launch
+        self.gameplay.build()
         self.visual.clear()
         self.visual.scenes.append(
             GameplayScreen(self.gameplay, pause=self.pause)

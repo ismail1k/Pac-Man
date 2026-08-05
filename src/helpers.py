@@ -1,9 +1,8 @@
-import pygame
+import pygame, os
 from abc import ABC
 from functools import wraps
 from typing import Any, Callable
 from threading import Timer
-from src.parsing import Configuration
 
 
 class Widget(ABC):
@@ -123,6 +122,7 @@ class Playable(ABC):
 
     def spawn(self, cell_left: int | None = None, cell_top: int | None = None, delay: int = 0) -> None:
         from src.playground import Canvas
+        from src.parsing import Configuration
         def _spawn(x: int, y: int) -> None:
             self.direction = ""
             self.cell = (x, y)
@@ -222,3 +222,13 @@ class Audio:
     def coin(song: str = "assets/audios/coin.mp3") -> None:
         if Audio._song != song:
             pygame.mixer.Sound(song).play()
+
+
+class Utils:
+    @staticmethod
+    def touch(filename: str, content: str = "") -> None:
+        if not os.path.exists(filename):
+            if os.path.dirname(filename):
+                os.makedirs(os.path.dirname(filename), exist_ok=True)
+            with open(filename, "w", encoding="utf-8") as file:
+                file.write(content)

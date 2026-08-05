@@ -26,9 +26,9 @@ class Gameplay(VContainer):
         level: int = self.states.get('level')
         if level >= 10:
             self.onGameEnd()
-        self.reset()
         self.states.update({'level': level + 1})
         self.states.update({'expired_at': time() + Configuration.get('level_max_time', 60)})
+        self.build()
 
     def onPlayerEaten(self, player: Player, opponent: Ghost) -> None:
         if opponent.scared_at + 15 > time():
@@ -55,13 +55,13 @@ class Gameplay(VContainer):
                 opponent.scared_at = time()
         self.states.update({'score': self.states.get('score') + score})
 
-    def reset(self) -> None:
+    def build(self) -> None:
         self.canvas.generate(
             size=(
                 Configuration.get('width', 18),
                 Configuration.get('height', 12)
             ),
-            seed=Configuration.get('seed', random())
+            seed=Configuration.get('seed', random()) + self.states.get('level', 1)
         )
         self.opponents = []
         for index, cell in enumerate([(0, 0), (-1, 0), (0, -1), (-1, -1)]):

@@ -5,7 +5,7 @@ from typing import Callable
 from functools import partial
 from src.visualizer import Visualizer
 from src.interface import VContainer, VImage, VText, VSelect, VOption
-from src.parsing import Configuration
+from src.parsing import Configuration, Leaderboard
 from src.helpers import Widget, Controller, Audio
 from src.playground import Gameplay
 
@@ -45,10 +45,6 @@ class GameplayScreen(Scene, Controller):
         self.gameplay: Gameplay = gameplay
         self.onClick(self.ACTION_PAUSE, lambda: pause())
         screen_w, screen_h = Visualizer.resolution
-        image: Widget = VImage("assets/images/pac-man-logo.png")
-        image.left += (gameplay.width/2) - (image.width/2)
-        image.padding.update({'bottom': 10})
-        image.top -= image.size[1]
         score: Widget = VText(lambda: f"Score: {self.gameplay.states.get('score')}")
         score.padding.update({'bottom': 10})
         score.top -= score.size[1]
@@ -63,6 +59,10 @@ class GameplayScreen(Scene, Controller):
         level.padding.update({'bottom': 10})
         level.top -= level.size[1]
         level.left += gameplay.width - level.width
+        image: Widget = VImage("assets/images/pac-man-logo.png")
+        image.left += (gameplay.width/2) - (image.width/2)
+        image.padding.update({'bottom': 10})
+        image.top -= image.size[1] + level.size[1]
         Audio.music()
         Scene.__init__(self,
             VContainer(
@@ -107,11 +107,14 @@ class LeaderboardScreen(Scene):
         image: VImage = VImage("assets/images/pac-man-logo.png", size=(289 * 2, 70 * 2))
         image.padding['bottom'] = 35
         players: list[VText] = []
-        for index, record in enumerate([("iandalou", 2100), ("andaloui", 900), ("ismaila", 800)]):
-            player, score = record
-            text: VText = VText(f"{index + 1}. {player} - {score} pts")
+        for index, record in enumerate(Leaderboard.highscores()):
+            text: VText = VText(f"{index + 1}. {record['player']} - {record['score']} pts")
             text.padding.update({'top': 7, 'bottom': 7})
             players.append(text)
+        if not len(Leaderboard.highscores()):
+            players.append(
+                VText(f"Empty leaderboard!")
+            )
         Scene.__init__(self,
             VContainer(
                 [

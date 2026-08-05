@@ -1,7 +1,5 @@
 {
-    // file of height score.
-    # file of height score.
-    "highscore_filename": "",
+    "highscore_filename": "highscores.json",
     "width": 10,
     "height": 6,
     "lives": 4,
@@ -10,5 +8,5 @@
     "points_per_super_pacgum": 50,
     "points_per_ghost": 200,
     "seed": 42,
-    "level_max_time": 60
+    "level_max_time": 6
 }

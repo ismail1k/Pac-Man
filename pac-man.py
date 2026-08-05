@@ -4,7 +4,7 @@ from src.exceptions import ParsingException
 from src.parsing import Configuration, Leaderboard
 from src.visualizer import Visualizer
 from src.interface import VContainer, VImage, VText, VSelect, VOption
-from src.screens import MainScreen, GameplayScreen, PauseScreen, LeaderboardScreen
+from src.screens import MainScreen, GameplayScreen, PauseScreen, LeaderboardScreen, SaveScoreScreen
 from src.playground import Gameplay
 
 
@@ -32,7 +32,8 @@ class Pacman:
             'hearts': Configuration.get('lives', 3),
             'expired_at': time() + Configuration.get('level_max_time', 60),
         })
-        self.gameplay.onGameEnd = self.launch
+        self.gameplay.onGameWin = self.win
+        self.gameplay.onGameLose = self.lose
         self.gameplay.build()
         self.visual.clear()
         self.visual.scenes.append(
@@ -47,6 +48,26 @@ class Pacman:
 
     def instructions(self) -> None:
         self.visual.clear()
+
+    def win(self) -> None:
+        self.visual.clear()
+        self.visual.scenes.append(
+            SaveScoreScreen(
+                "Congratulation, You win!",
+                self.gameplay.states.get('score'),
+                confirm=self.leaderboard,
+            )
+        )
+
+    def lose(self) -> None:
+        self.visual.clear()
+        self.visual.scenes.append(
+            SaveScoreScreen(
+                "You lose :(",
+                self.gameplay.states.get('score'),
+                confirm=self.leaderboard,
+            )
+        )
 
     def pause(self) -> None:
         self.visual.clear()

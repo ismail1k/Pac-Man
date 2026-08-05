@@ -32,7 +32,7 @@ class Visualizer:
                 if event.type == pygame.QUIT:
                     runtime = False
                 if event.type == pygame.KEYDOWN:
-                    if event.key in [pygame.K_ESCAPE, pygame.K_q]:
+                    if event.key in [pygame.K_ESCAPE]:
                         runtime = False
             for element in self.scenes:
                 if element.visible:

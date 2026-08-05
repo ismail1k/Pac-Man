@@ -37,6 +37,48 @@ class VText(Widget):
         visual.screen.blit(self.surface, self.position)
 
 
+class VField(Widget):
+    def __init__(self, content: str | Callable, position: tuple[int, int] = (0, 0)) -> None:
+        self._content: str | Callable = content
+        self.font = pygame.font.Font("assets/fonts/PressStart2P-Regular.ttf", 24)
+        super().__init__(self.font.render(self.content, True, (255, 255, 255)), position)
+        self.padding.update({'left': 10, 'bottom': 10, 'right': 10, 'top': 10})
+
+    @property
+    def surface(self) -> pygame.Surface:
+        surface = pygame.Surface(
+            self.size,
+            pygame.SRCALPHA
+        )
+        surface.fill((40, 40, 40))
+        pygame.draw.rect(
+            surface,
+            (255, 255, 255),
+            surface.get_rect(),
+            width=2,
+            border_radius=6
+        )
+        text = self.font.render(self.content, True, (255, 255, 255))
+        text_rect = text.get_rect(
+            midleft=(10, self.size[1] // 2)
+        )
+        surface.blit(text, text_rect)
+        return surface
+
+    @property
+    def content(self) -> bool:
+        if isinstance(self._content, Callable):
+            return self._content()
+        return self._content
+
+    @content.setter
+    def content(self, content: bool | Callable) -> None:
+        self._content = content
+
+    def render(self, visual: Any) -> None:
+        visual.screen.blit(self.surface, self.position)
+
+
 class VOption(Widget):
     def __init__(self, label: str, onselect: Callable, position: tuple[int, int] = (0, 0)) -> None:
         self.font = pygame.font.Font("assets/fonts/PressStart2P-Regular.ttf", 28)

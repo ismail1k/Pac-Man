@@ -11,7 +11,8 @@ from src.helpers import Audio
 class Gameplay(VContainer):
     def __init__(self) -> None:
         VContainer.__init__(self, [])
-        self.onGameEnd: Callable = lambda: None
+        self.onGameWin: Callable = lambda: None
+        self.onGameLose: Callable = lambda: None
         self.absolute: bool = True
         self.opponents: list[Ghost] = []
         self.rewards: list[Reward] = []
@@ -25,9 +26,11 @@ class Gameplay(VContainer):
     def onGameLevelUp(self) -> None:
         level: int = self.states.get('level')
         if level >= 10:
-            self.onGameEnd()
-        self.states.update({'level': level + 1})
-        self.states.update({'expired_at': time() + Configuration.get('level_max_time', 60)})
+            self.onGameWin()
+        self.states.update({
+            'level': level + 1,
+            'expired_at': time() + Configuration.get('level_max_time', 60)
+        })
         self.build()
 
     def onPlayerEaten(self, player: Player, opponent: Ghost) -> None:
@@ -40,7 +43,7 @@ class Gameplay(VContainer):
         self.states.update({'hearts': self.states.get('hearts') - 1})
         self.states.update({'freeze': True})
         if self.states.get('hearts') <= 0:
-            return self.onGameEnd()
+            return self.onGameWin()
         sleep(1.5)
         self.states.update({'freeze': False})
         player.spawn()
@@ -63,7 +66,7 @@ class Gameplay(VContainer):
             ),
             seed=Configuration.get('seed', random()) + self.states.get('level', 1)
         )
-        self.opponents = []
+        self.opponents.clear()
         for index, cell in enumerate([(0, 0), (-1, 0), (0, -1), (-1, -1)]):
             opponent: Ghost = Ghost(self.canvas, self.states)
             opponent.type = index
@@ -71,9 +74,9 @@ class Gameplay(VContainer):
             opponent.spawn(*cell)
             opponent.init_cell = cell
             self.opponents.append(opponent)
-        self.rewards.clear()
         rows = len(self.canvas.maze)
         cols = len(self.canvas.maze[0])
+        self.rewards.clear()
         for y in range(rows):
             for x in range(cols):
                 if self.canvas.maze[y][x] == 15:
@@ -93,7 +96,7 @@ class Gameplay(VContainer):
 
     def render(self, visual: Visualizer) -> None:
         if self.states.get('expired_at', time() - 1) <= time():
-            self.onGameEnd()
+            self.onGameLose()
         self.canvas.render(visual)
         rect_p = self.player.surface.get_rect(topleft=self.player.position)
         for index, reward in enumerate(self.rewards[:]):

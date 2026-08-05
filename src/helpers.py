@@ -1,8 +1,9 @@
-import pygame, os
+import pygame, inspect
 from abc import ABC
 from functools import wraps
 from typing import Any, Callable
 from threading import Timer
+from pathlib import Path
 
 
 class Widget(ABC):
@@ -156,6 +157,11 @@ class Controller(ABC):
     ACTION_CONFIRM = [pygame.K_RETURN, 0]
     ACTION_BACK = [pygame.K_BACKSPACE, 1]
     ACTION_QUIT = [pygame.K_ESCAPE, pygame.K_q]
+    INPUT_KEYBOARD = (
+        [pygame.K_a + i for i in range(26)] +
+        [pygame.K_0 + i for i in range(10)] +
+        [pygame.K_SPACE]
+    )
     def __init__(self) -> None:
         self.__events: list[tuple[int, Callable]] = []
 
@@ -167,7 +173,10 @@ class Controller(ABC):
         def trigger(key: int) -> None:
             for event, callback in self.__events:
                 if event == key:
-                    callback()
+                    if len(inspect.signature(callback).parameters):
+                        callback(key)
+                    else:
+                        callback()
 
         for event in events:
             if event.type == pygame.KEYDOWN:
@@ -226,9 +235,11 @@ class Audio:
 
 class Utils:
     @staticmethod
-    def touch(filename: str, content: str = "") -> None:
-        if not os.path.exists(filename):
-            if os.path.dirname(filename):
-                os.makedirs(os.path.dirname(filename), exist_ok=True)
-            with open(filename, "w", encoding="utf-8") as file:
-                file.write(content)
+    def save(filename: str, content: str = "", override: bool = True) -> None:
+        path = Path(filename)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if path.exists() and not override:
+            return
+        path.write_text(content, encoding="utf-8")
+
+

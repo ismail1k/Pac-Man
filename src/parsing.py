@@ -39,19 +39,27 @@ class Leaderboard:
                     line = line.strip()
                     if not line.startswith('#') and not line.startswith('//'):
                         content += line
-                if not isinstance(json.loads(content), list):
-                    raise ParsingException(f"file '{filename}' content is not list")
                 Leaderboard._data = json.loads(content)
         except FileNotFoundError:
-            Utils.touch(filename, "[]")
+            Utils.touch(filename, "{}")
         except json.decoder.JSONDecodeError:
             raise ParsingException(f"File '{filename}' not valid JSON")
 
-
     @staticmethod
     def highscores() -> list:
+        items: list[dict] = []
+        for key, value in Leaderboard._data.items():
+            items.append({'player': key, 'score': value})
         return list(sorted(
-            Leaderboard._data,
+            items,
             key=lambda r: r['score'],
             reverse=True
         ))
+
+    @staticmethod
+    def update(name: str, score: int) -> None:
+        Leaderboard._data.update({name: score})
+        Utils.save(
+            Configuration.get('highscore_filename', 'highscore.json'),
+            json.dumps(Leaderboard._data)
+        )

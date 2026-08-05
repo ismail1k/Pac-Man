@@ -4,7 +4,7 @@ from time import time
 from typing import Callable
 from functools import partial
 from src.visualizer import Visualizer
-from src.interface import VContainer, VImage, VText, VSelect, VOption
+from src.interface import VContainer, VImage, VText, VField, VSelect, VOption
 from src.parsing import Configuration, Leaderboard
 from src.helpers import Widget, Controller, Audio
 from src.playground import Gameplay
@@ -127,3 +127,49 @@ class LeaderboardScreen(Scene):
                 fullscreen=True
             )
         )
+
+
+class SaveScoreScreen(Scene, Controller):
+    def __init__(self, label: str, score: int, confirm: Callable) -> None:
+        Controller.__init__(self)
+        value: str = ""
+        def _add(key) -> None:
+            nonlocal value
+            if key == pygame.K_SPACE:
+                value = value + " "
+            else:
+                value = value + pygame.key.name(key)
+        def _remove() -> None:
+            nonlocal value
+            value = value[:-1]
+        def _confirm() -> None:
+            nonlocal value
+            Leaderboard.update(value, score)
+            confirm()
+
+        self.onClick(self.INPUT_KEYBOARD, _add)
+        self.onClick(self.ACTION_BACK, _remove)
+        self.onClick(self.ACTION_CONFIRM, _confirm)
+        image: VImage = VImage("assets/images/pac-man-logo.png", size=(289 * 2, 70 * 2))
+        image.padding.update({'bottom': 40})
+        title: VText = VText(label)
+        title.padding.update({'bottom': 15})
+        description: VText = VText("Put your name bellow")
+        description.padding.update({'bottom': 15})
+        field: VField = VField(lambda: value)
+        field.width = image.size[0] - 40
+        Scene.__init__(self,
+            VContainer(
+                [
+                    image,
+                    title,
+                    description,
+                    field,
+                ],
+                fullscreen=True
+            )
+        )
+
+    def render(self, visual: Visualizer) -> None:
+        self.listenControllerEvents(visual.events)
+        Scene.render(self, visual)

@@ -18,7 +18,7 @@ class VImage(Widget):
 class VText(Widget):
     def __init__(self, content: str | Callable, position: tuple[int, int] = (0, 0), color: tuple[int, int, int] = (255, 255, 255)) -> None:
         self._content: str | Callable = content
-        self.font = pygame.font.Font("assets/fonts/PressStart2P-Regular.ttf", 28)
+        self.font = pygame.font.Font("assets/fonts/PressStart2P-Regular.ttf", 24)
         super().__init__(self.font.render(self.content, True, color), position)
         self.color: tuple[int, int, int] = color
         

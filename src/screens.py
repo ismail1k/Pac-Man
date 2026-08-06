@@ -92,7 +92,7 @@ class PauseScreen(Scene):
                 [
                     VImage("assets/images/pac-man-logo.png", size=(289 * 2, 70 * 2)),
                     VSelect([
-                        VOption("1 Pause", onselect=lambda: resume()),
+                        VOption("1 Continue", onselect=lambda: resume()),
                         VOption("2 Main Menu", onselect=lambda: launch()),
                         VOption("2 Exit", onselect=lambda: sys.exit(0)),
                     ], position=(35, 20))
@@ -154,6 +154,8 @@ class SaveScoreScreen(Scene, Controller):
         image.padding.update({'bottom': 40})
         title: VText = VText(label)
         title.padding.update({'bottom': 15})
+        summary: VText = VText(f'Your Score: {score} pts')
+        summary.padding.update({'bottom': 15})
         description: VText = VText("Put your name bellow")
         description.padding.update({'bottom': 15})
         field: VField = VField(lambda: value)
@@ -163,6 +165,7 @@ class SaveScoreScreen(Scene, Controller):
                 [
                     image,
                     title,
+                    summary,
                     description,
                     field,
                 ],

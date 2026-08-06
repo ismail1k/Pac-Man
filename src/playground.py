@@ -70,6 +70,7 @@ class Gameplay(VContainer):
         for index, cell in enumerate([(0, 0), (-1, 0), (0, -1), (-1, -1)]):
             opponent: Ghost = Ghost(self.canvas, self.states)
             opponent.type = index
+            opponent.player = self.player
             opponent.reset()
             opponent.spawn(*cell)
             opponent.init_cell = cell

@@ -114,19 +114,81 @@ class Ghost(Widget, Playable):
             if direction == 'W':
                 return 'E'
             return ''
-        neighbors = self.canvas.neighbors(self.cell)
-        if self.direction:
-            rev = reverse(self.direction)
-            choices = [d for d in neighbors if d != rev]
-        else:
-            choices = neighbors
-
-        if choices:
-            self._cache["direction"] = random.choice(choices)
-        elif self.direction:
-            self._cache["direction"] = reverse(self.direction)
-        else:
-            self._cache["direction"] = ""
+ 
+        def wander() -> None:
+            neighbors = self.canvas.neighbors(self.cell)
+            if self.direction:
+                rev = reverse(self.direction)
+                choices = [d for d in neighbors if d != rev]
+            else:
+                choices = neighbors
+ 
+            if choices:
+                self._cache["direction"] = random.choice(choices)
+            elif self.direction:
+                self._cache["direction"] = reverse(self.direction)
+            else:
+                self._cache["direction"] = ""
+ 
+        player = self.player
+        if player is None or not player.visible:
+            return wander()
+ 
+        scared: bool = self.scared_at + 15 > time()
+        distance: int = abs(self.cell[0] - player.cell[0]) + abs(self.cell[1] - player.cell[1])
+ 
+        if scared:
+            neighbors = self.canvas.neighbors(self.cell)
+            if self.direction:
+                rev = reverse(self.direction)
+                candidates = [d for d in neighbors if d != rev] or neighbors
+            else:
+                candidates = neighbors
+ 
+            best_direction: str = ""
+            best_distance: int = -1
+            for direction in candidates:
+                target = self.canvas.navigate(self.cell, direction)
+                if target is None:
+                    continue
+                target_distance = abs(target[0] - player.cell[0]) + abs(target[1] - player.cell[1])
+                if target_distance > best_distance:
+                    best_distance = target_distance
+                    best_direction = direction
+            self._cache["direction"] = best_direction
+            return
+ 
+        if distance <= 6:
+            path = self._find_path(self.cell, player.cell)
+            if path and len(path) > 1:
+                dx = path[1][0] - self.cell[0]
+                dy = path[1][1] - self.cell[1]
+                direction = {(0, -1): 'N', (1, 0): 'E', (0, 1): 'S', (-1, 0): 'W'}.get((dx, dy), '')
+                if direction:
+                    self._cache["direction"] = direction
+                    return
+ 
+        wander()
+ 
+    def _find_path(self, start: tuple[int, int], goal: tuple[int, int]) -> list[tuple[int, int]] | None:
+        from collections import deque
+        if start == goal:
+            return [start]
+        visited: set = {start}
+        queue = deque([[start]])
+        while queue:
+            path = queue.popleft()
+            current = path[-1]
+            for direction in self.canvas.neighbors(current):
+                next_cell = self.canvas.navigate(current, direction)
+                if next_cell is None or next_cell in visited:
+                    continue
+                new_path = path + [next_cell]
+                if next_cell == goal:
+                    return new_path
+                visited.add(next_cell)
+                queue.append(new_path)
+        return None
 
     def render(self, visual: Visualizer) -> None:
         self.thread()

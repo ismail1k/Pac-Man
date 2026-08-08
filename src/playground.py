@@ -1,10 +1,10 @@
-import pygame
 from random import random
 from time import time, sleep
+from typing import Callable
 from src.parsing import Configuration
 from src.visualizer import Visualizer
-from src.interface import VContainer, VImage, VText
-from src.objects import Canvas, Player, Ghost, Reward
+from src.interface import VContainer
+from src.objects import Canvas, Player, Ghost, Reward, Cheat
 from src.helpers import Audio
 
 
@@ -36,9 +36,12 @@ class Gameplay(VContainer):
     def onPlayerEaten(self, player: Player, opponent: Ghost) -> None:
         if opponent.scared_at + 15 > time():
             cooldown: int = int(abs(time() - opponent.scared_at - 15))
-            self.states.update({'score': self.states.get('score') + Configuration.get('points_per_ghost', 100)})
+            self.states.update({'score': self.states.get('score') +
+                                Configuration.get('points_per_ghost', 100)})
             opponent.dispawn()
             opponent.spawn(*opponent.init_cell, cooldown)
+            return None
+        if Cheat.invincibility:
             return None
         self.states.update({'hearts': self.states.get('hearts') - 1})
         self.states.update({'freeze': True})

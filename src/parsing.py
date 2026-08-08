@@ -41,7 +41,7 @@ class Leaderboard:
                         content += line
                 Leaderboard._data = json.loads(content)
         except FileNotFoundError:
-            Utils.touch(filename, "{}")
+            Utils.save(filename, "{}")
         except json.decoder.JSONDecodeError:
             raise ParsingException(f"File '{filename}' not valid JSON")
 

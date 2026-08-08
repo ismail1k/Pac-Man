@@ -1,13 +1,16 @@
-import pygame, inspect
+import pygame
+import inspect
 from abc import ABC
-from functools import wraps
 from typing import Any, Callable
 from threading import Timer
 from pathlib import Path
 
 
 class Widget(ABC):
-    def __init__(self, surface: pygame.Surface, position: tuple[int, int] = (0, 0), offset: tuple[int, int] = (0, 0)) -> None:
+    def __init__(self,
+                 surface: pygame.Surface,
+                 position: tuple[int, int] = (0, 0),
+                 offset: tuple[int, int] = (0, 0)) -> None:
         self._surface: pygame.Surface = surface
         self._visible: bool | Callable = True
         self.left, self.top = position
@@ -121,14 +124,15 @@ class Playable(ABC):
             if direction and not target:
                 self._cache.update({'direction': ''})
 
-    def spawn(self, cell_left: int | None = None, cell_top: int | None = None, delay: int = 0) -> None:
-        from src.playground import Canvas
+    def spawn(self, cell_left: int | None = None,
+              cell_top: int | None = None, delay: int = 0) -> None:
         from src.parsing import Configuration
+
         def _spawn(x: int, y: int) -> None:
             self.direction = ""
             self.cell = (x, y)
             self.position = self.canvas.CellToPosition(self.cell)
-            self.visible: bool = True
+            self.visible = True
 
         if cell_left is None:
             cell_left = int((Configuration.get('width', 18) / 2) - 0.5)
@@ -143,7 +147,7 @@ class Playable(ABC):
         Timer(delay, _spawn, args=(cell_left, cell_top)).start()
 
     def dispawn(self) -> None:
-        self.visible: bool = False
+        self.visible = False
         self.cell = (-1, -1)
         self.position = (-1, -1)
 
@@ -162,6 +166,7 @@ class Controller(ABC):
         [pygame.K_0 + i for i in range(10)] +
         [pygame.K_SPACE]
     )
+
     def __init__(self) -> None:
         self.__events: list[tuple[int, Callable]] = []
 

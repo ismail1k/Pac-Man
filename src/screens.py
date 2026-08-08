@@ -1,4 +1,5 @@
-import pygame, sys
+import pygame
+import sys
 from abc import ABC
 from time import time
 from typing import Callable
@@ -21,10 +22,10 @@ class Scene(Widget, ABC):
 
 class MainScreen(Scene):
     def __init__(self,
-        play: Callable,
-        leaderboard: Callable,
-        instructions: Callable,
-        ) -> None:
+                 play: Callable,
+                 leaderboard: Callable,
+                 instructions: Callable,
+                 ) -> None:
         Audio.menu()
         super().__init__(
             VContainer([
@@ -64,8 +65,7 @@ class GameplayScreen(Scene, Controller):
         image.padding.update({'bottom': 10})
         image.top -= image.size[1] + level.size[1]
         Audio.music()
-        Scene.__init__(self,
-            VContainer(
+        Scene.__init__(self, VContainer(
                 [gameplay, score, image, hearts, timer, level],
                 fullscreen=True,
                 absolute=True,
@@ -113,10 +113,9 @@ class LeaderboardScreen(Scene):
             players.append(text)
         if not len(Leaderboard.highscores()):
             players.append(
-                VText(f"Empty leaderboard!")
+                VText("Empty leaderboard!")
             )
-        Scene.__init__(self,
-            VContainer(
+        Scene.__init__(self, VContainer(
                 [
                     image,
                     *players,
@@ -160,19 +159,60 @@ class SaveScoreScreen(Scene, Controller):
         description.padding.update({'bottom': 15})
         field: VField = VField(lambda: value)
         field.width = image.size[0] - 40
-        Scene.__init__(self,
-            VContainer(
-                [
-                    image,
-                    title,
-                    summary,
-                    description,
-                    field,
-                ],
-                fullscreen=True
+        Scene.__init__(self, VContainer(
+                                [
+                                    image,
+                                    title,
+                                    summary,
+                                    description,
+                                    field,
+                                ],
+                                fullscreen=True
             )
         )
 
     def render(self, visual: Visualizer) -> None:
         self.listenControllerEvents(visual.events)
         Scene.render(self, visual)
+
+
+class InstructionScreen(Scene):
+    INSTRUCTIONS = [
+        "HOW TO PLAY:",
+        "",
+        "Move your character with the arrow keys to navigate the maze.",
+        "",
+        "Collect all the pac-gums scattered around the maze to complete "
+        "the level. ",
+        "Corner pac-gums are special (super pac-gums): eating one turns "
+        "the ghosts ",
+        "scared for a short time, letting you eat them for bonus points.",
+        "",
+        "Avoid the ghosts! If a ghost catches you while it isn't scared,"
+        " you lose ",
+        "a heart and briefly freeze before respawning."
+        " Lose all your hearts and ",
+        "the game is over.",
+        "",
+        "Each level has a time limit — clear it before "
+        "time runs out or you lose.",
+        "Clear all 10 levels to win the game.",
+        "",
+        "SCORING",
+        "- Pac-gum: 5 points",
+        "- Super pac-gum: 25 points",
+        "- Eating a scared ghost: 100 points",
+        "",
+        "Good luck!"
+    ]
+
+    def __init__(self, back: Callable):
+        self.V = []
+        margen = -80
+        for line in self.INSTRUCTIONS:
+            self.V.append(VText(line, position=(0, margen)))
+            margen += 10
+        self.V.append(VSelect([VOption("Back", onselect=lambda: back())],
+                      position=(0, margen + 40), inline=True))
+
+        super().__init__(VContainer(self.V, fullscreen=True))

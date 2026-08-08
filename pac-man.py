@@ -3,8 +3,12 @@ from time import time
 from src.exceptions import ParsingException
 from src.parsing import Configuration, Leaderboard
 from src.visualizer import Visualizer
-from src.interface import VContainer, VImage, VText, VSelect, VOption
-from src.screens import MainScreen, GameplayScreen, PauseScreen, LeaderboardScreen, SaveScoreScreen
+from src.screens import (MainScreen,
+                         GameplayScreen,
+                         PauseScreen,
+                         LeaderboardScreen,
+                         SaveScoreScreen,
+                         InstructionScreen)
 from src.playground import Gameplay
 
 
@@ -48,6 +52,9 @@ class Pacman:
 
     def instructions(self) -> None:
         self.visual.clear()
+        self.visual.scenes.append(
+            InstructionScreen(back=self.launch)
+        )
 
     def win(self) -> None:
         self.visual.clear()

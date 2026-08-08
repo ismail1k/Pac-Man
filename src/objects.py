@@ -1,10 +1,38 @@
 import pygame, random, os
 from time import time
-from typing import Any, Callable
+from typing import Any
 from mazegenerator import MazeGenerator
 from src.parsing import Configuration
 from src.visualizer import Visualizer
 from src.helpers import Widget, Playable, Controller
+
+
+class Cheat:
+    invincibility = False
+    level = False
+    ghost_freeze = False
+    extra_lives = False
+    increased_speed = False
+
+    @staticmethod
+    def set_invincibility():
+        Cheat.invincibility = not Cheat.invincibility
+
+    @staticmethod
+    def set_increased_speed():
+        Cheat.increased_speed = not Cheat.increased_speed
+
+    @staticmethod
+    def set_ghost_freeze():
+        Cheat.ghost_freeze = not Cheat.ghost_freeze
+
+    @staticmethod
+    def set_level():
+        Cheat.level = not Cheat.level
+
+    @staticmethod
+    def set_extra_lives():
+        Cheat.extra_lives = not Cheat.extra_lives
 
 
 class Reward(Widget, Playable):
@@ -32,6 +60,7 @@ class Player(Widget, Playable, Controller):
         "assets/images/player_close.png",
         "assets/images/player_open.png",
     ]
+
     def __init__(self, canvas: Any, states: dict = {}) -> None:
         Widget.__init__(self, pygame.Surface((0, 0)))
         Playable.__init__(self, canvas, states)
@@ -40,8 +69,19 @@ class Player(Widget, Playable, Controller):
         self.onClick(self.ACTION_DOWN, lambda: self._cache.update({'direction': "S"}))
         self.onClick(self.ACTION_LEFT, lambda: self._cache.update({'direction': "W"}))
         self.onClick(self.ACTION_RIGHT, lambda: self._cache.update({'direction': "E"}))
+
+        # this clicks for the cheat mode
+        self.onClick([pygame.K_1], Cheat.set_invincibility)
+        self.onClick([pygame.K_2], Cheat.set_increased_speed)
+        self.onClick([pygame.K_3], Cheat.set_ghost_freeze)
+        self.onClick([pygame.K_4], Cheat.set_level)
+        self.onClick([pygame.K_5], Cheat.set_extra_lives)
+
         self.padding.update({'left': 15, 'bottom': 15, 'right': 15, 'top': 15})
         self.speed: float = 2.0
+
+        self.surface0 = pygame.image.load(self.textures[0]).convert_alpha()
+        self.surface1 = pygame.image.load(self.textures[1]).convert_alpha()
 
     @property
     def surface(self) -> pygame.Surface:
@@ -51,25 +91,36 @@ class Player(Widget, Playable, Controller):
         if self.direction == 'E':
             mouth = 1
             angle = 0
-        if self.direction == 'N':
+        elif self.direction == 'N':
             mouth = 1
             angle = 90
-        if self.direction == 'W':
+        elif self.direction == 'W':
             mouth = 1
             angle = 180
             flip = True
-        if self.direction == 'S':
+        elif self.direction == 'S':
             mouth = 1
             angle = 270
-        surface = pygame.image.load(self.textures[mouth]).convert_alpha()
+
+        if mouth == 0:
+            surface = self.surface0
+        else:
+            surface = self.surface1
+
         surface = pygame.transform.smoothscale(surface, (35, 35))
         surface = pygame.transform.flip(surface, False, flip)
+        if Cheat.invincibility:
+            surface.set_alpha(128)
         return pygame.transform.rotate(surface, angle)
 
     def onDestroy(self) -> None:
         self.destroyControllerEvents()
 
     def render(self, visual: Visualizer) -> None:
+        if Cheat.increased_speed:
+            self.speed = 4.0
+        else:
+            self.speed = 2.0
         self.listenControllerEvents(visual.events)
         self.thread()
         if self.visible:
@@ -84,6 +135,7 @@ class Ghost(Widget, Playable):
         "assets/images/ghost_red.png",
         "assets/images/enemy_fear_white.png",
     ]
+
     def __init__(self, canvas: Any, states: dict = {}) -> None:
         Widget.__init__(self, pygame.Surface((0, 0)))
         Playable.__init__(self, canvas, states)
@@ -91,6 +143,7 @@ class Ghost(Widget, Playable):
         self.init_cell: tuple[int, int] = (0, 0)
         self.padding.update({'left': 15, 'bottom': 15, 'right': 15, 'top': 15})
         self.type: int = 0
+        self.invincibility: bool = Configuration.get("invincibility", False)
 
     @property
     def surface(self) -> pygame.Surface:
@@ -100,10 +153,15 @@ class Ghost(Widget, Playable):
             surface = pygame.image.load(self.textures[-1]).convert_alpha()
             if cooldown <= 5:
                 if cooldown % 2 == 0:
-                    surface = pygame.image.load(self.textures[self.type]).convert_alpha()
+                    surface = pygame.image.load(
+                        self.textures[self.type]).convert_alpha()
         return pygame.transform.smoothscale(surface, (35, 35))
 
     def behaviour(self):
+        if Cheat.ghost_freeze:
+            self._cache["direction"] = ""
+            return
+
         def reverse(direction: str) -> str:
             if direction == 'N':
                 return 'S'
@@ -114,7 +172,7 @@ class Ghost(Widget, Playable):
             if direction == 'W':
                 return 'E'
             return ''
- 
+
         def wander() -> None:
             neighbors = self.canvas.neighbors(self.cell)
             if self.direction:
@@ -122,21 +180,21 @@ class Ghost(Widget, Playable):
                 choices = [d for d in neighbors if d != rev]
             else:
                 choices = neighbors
- 
+
             if choices:
                 self._cache["direction"] = random.choice(choices)
             elif self.direction:
                 self._cache["direction"] = reverse(self.direction)
             else:
                 self._cache["direction"] = ""
- 
+
         player = self.player
         if player is None or not player.visible:
             return wander()
- 
+
         scared: bool = self.scared_at + 15 > time()
         distance: int = abs(self.cell[0] - player.cell[0]) + abs(self.cell[1] - player.cell[1])
- 
+
         if scared:
             neighbors = self.canvas.neighbors(self.cell)
             if self.direction:
@@ -144,7 +202,7 @@ class Ghost(Widget, Playable):
                 candidates = [d for d in neighbors if d != rev] or neighbors
             else:
                 candidates = neighbors
- 
+
             best_direction: str = ""
             best_distance: int = -1
             for direction in candidates:
@@ -157,8 +215,8 @@ class Ghost(Widget, Playable):
                     best_direction = direction
             self._cache["direction"] = best_direction
             return
- 
-        if distance <= 6:
+
+        if distance <= 6 and not Cheat.invincibility:
             path = self._find_path(self.cell, player.cell)
             if path and len(path) > 1:
                 dx = path[1][0] - self.cell[0]
@@ -167,9 +225,9 @@ class Ghost(Widget, Playable):
                 if direction:
                     self._cache["direction"] = direction
                     return
- 
+
         wander()
- 
+
     def _find_path(self, start: tuple[int, int], goal: tuple[int, int]) -> list[tuple[int, int]] | None:
         from collections import deque
         if start == goal:

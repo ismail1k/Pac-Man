@@ -21,7 +21,7 @@ class VText(Widget):
         self.font = pygame.font.Font("assets/fonts/PressStart2P-Regular.ttf", 24)
         super().__init__(self.font.render(self.content, True, color), position)
         self.color: tuple[int, int, int] = color
-        
+
     @property
     def content(self) -> bool:
         if isinstance(self._content, Callable):
@@ -127,9 +127,11 @@ class VSelect(Widget, Controller):
         def next() -> None:
             if self.focus > 0:
                 self.focus -= 1
+
         def previous() -> None:
             if self.focus < len(self.options) - 1:
                 self.focus += 1
+
         def select() -> None:
             self.options[self.focus].onselect()
 
@@ -155,9 +157,9 @@ class VSelect(Widget, Controller):
 
 class VContainer(Widget):
     def __init__(self, elements: list[Any], position: tuple[int, int] = (0, 0),
-        visible: bool | Callable = True, absolute: bool = False,
-        fullscreen: bool = False, inline: bool = False
-        ) -> None:
+                 visible: bool | Callable = True, absolute: bool = False,
+                 fullscreen: bool = False, inline: bool = False
+                 ) -> None:
         super().__init__(pygame.Surface((0, 0)), position)
         self.elements: list[Any] = elements
         self.visible: bool | Callable = visible

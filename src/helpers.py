@@ -1,5 +1,4 @@
-import pygame
-import inspect
+import pygame, inspect
 from abc import ABC
 from typing import Any, Callable
 from threading import Timer
@@ -7,10 +6,7 @@ from pathlib import Path
 
 
 class Widget(ABC):
-    def __init__(self,
-                 surface: pygame.Surface,
-                 position: tuple[int, int] = (0, 0),
-                 offset: tuple[int, int] = (0, 0)) -> None:
+    def __init__(self, surface: pygame.Surface, position: tuple[int, int] = (0, 0), offset: tuple[int, int] = (0, 0)) -> None:
         self._surface: pygame.Surface = surface
         self._visible: bool | Callable = True
         self.left, self.top = position
@@ -124,8 +120,7 @@ class Playable(ABC):
             if direction and not target:
                 self._cache.update({'direction': ''})
 
-    def spawn(self, cell_left: int | None = None,
-              cell_top: int | None = None, delay: int = 0) -> None:
+    def spawn(self, cell_left: int | None = None, cell_top: int | None = None, delay: int = 0) -> None:
         from src.parsing import Configuration
 
         def _spawn(x: int, y: int) -> None:
@@ -248,3 +243,29 @@ class Utils:
         path.write_text(content, encoding="utf-8")
 
 
+class Cheat:
+    invincibility = False
+    level = False
+    ghost_freeze = False
+    extra_lives = False
+    increased_speed = False
+
+    @staticmethod
+    def set_invincibility():
+        Cheat.invincibility = not Cheat.invincibility
+
+    @staticmethod
+    def set_increased_speed():
+        Cheat.increased_speed = not Cheat.increased_speed
+
+    @staticmethod
+    def set_ghost_freeze():
+        Cheat.ghost_freeze = not Cheat.ghost_freeze
+
+    @staticmethod
+    def set_level():
+        Cheat.level = not Cheat.level
+
+    @staticmethod
+    def set_extra_lives():
+        Cheat.extra_lives = not Cheat.extra_lives

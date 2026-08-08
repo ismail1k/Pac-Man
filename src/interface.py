@@ -156,10 +156,7 @@ class VSelect(Widget, Controller):
 
 
 class VContainer(Widget):
-    def __init__(self, elements: list[Any], position: tuple[int, int] = (0, 0),
-                 visible: bool | Callable = True, absolute: bool = False,
-                 fullscreen: bool = False, inline: bool = False
-                 ) -> None:
+    def __init__(self, elements: list[Any], position: tuple[int, int] = (0, 0), visible: bool | Callable = True, absolute: bool = False, fullscreen: bool = False, inline: bool = False) -> None:
         super().__init__(pygame.Surface((0, 0)), position)
         self.elements: list[Any] = elements
         self.visible: bool | Callable = visible

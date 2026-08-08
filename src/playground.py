@@ -4,8 +4,8 @@ from typing import Callable
 from src.parsing import Configuration
 from src.visualizer import Visualizer
 from src.interface import VContainer
-from src.objects import Canvas, Player, Ghost, Reward, Cheat
-from src.helpers import Audio
+from src.objects import Canvas, Player, Ghost, Reward
+from src.helpers import Audio, Cheat
 
 
 class Gameplay(VContainer):

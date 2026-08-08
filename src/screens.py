@@ -177,42 +177,41 @@ class SaveScoreScreen(Scene, Controller):
 
 
 class InstructionScreen(Scene):
-    INSTRUCTIONS = [
-        "HOW TO PLAY:",
-        "",
-        "Move your character with the arrow keys to navigate the maze.",
-        "",
-        "Collect all the pac-gums scattered around the maze to complete "
-        "the level. ",
-        "Corner pac-gums are special (super pac-gums): eating one turns "
-        "the ghosts ",
-        "scared for a short time, letting you eat them for bonus points.",
-        "",
-        "Avoid the ghosts! If a ghost catches you while it isn't scared,"
-        " you lose ",
-        "a heart and briefly freeze before respawning."
-        " Lose all your hearts and ",
-        "the game is over.",
-        "",
-        "Each level has a time limit — clear it before "
-        "time runs out or you lose.",
-        "Clear all 10 levels to win the game.",
-        "",
-        "SCORING",
-        "- Pac-gum: 5 points",
-        "- Super pac-gum: 25 points",
-        "- Eating a scared ghost: 100 points",
-        "",
-        "Good luck!"
-    ]
-
     def __init__(self, back: Callable):
-        self.V = []
-        margen = -80
-        for line in self.INSTRUCTIONS:
-            self.V.append(VText(line, position=(0, margen)))
-            margen += 10
-        self.V.append(VSelect([VOption("Back", onselect=lambda: back())],
-                      position=(0, margen + 40), inline=True))
+        INSTRUCTIONS = [
+            "HOW TO PLAY:",
+            "",
+            "Move your character with the arrows or WASD keys.",
+            "",
+            "Collect all the pac-gums scattered around the maze to complete "
+            "the level. ",
+            "Corner pac-gums are special (super pac-gums): eating one turns "
+            "the ghosts ",
+            "scared for a short time, letting you eat them for bonus points.",
+            "",
+            "Avoid the ghosts! If a ghost catches you while it isn't scared,"
+            " you lose ",
+            "a heart and briefly freeze before respawning."
+            " Lose all your hearts and ",
+            "the game is over.",
+            "",
+            "Each level has a time limit — clear it before "
+            "time runs out or you lose.",
+            "Clear all 10 levels to win the game.",
+            "",
+            "SCORING",
+            f"- Pac-gum: {Configuration.get('points_per_pacgum', 5)} points",
+            f"- Super pac-gum: {Configuration.get('points_per_super_pacgum', 25)} points",
+            f"- Eating a scared ghost: {Configuration.get('points_per_ghost', 100)} points",
+            "",
+            "Good luck!"
+        ]
+        elements = []
+        margin = -80
+        for line in INSTRUCTIONS:
+            elements.append(VText(line, position=(0, margin)))
+            margin += 10
+        elements.append(VSelect([VOption("Back", onselect=lambda: back())],
+                      position=(0, margin + 40), inline=True))
 
-        super().__init__(VContainer(self.V, fullscreen=True))
+        super().__init__(VContainer(elements, fullscreen=True))

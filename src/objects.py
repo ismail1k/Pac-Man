@@ -4,35 +4,7 @@ from typing import Any
 from mazegenerator import MazeGenerator
 from src.parsing import Configuration
 from src.visualizer import Visualizer
-from src.helpers import Widget, Playable, Controller
-
-
-class Cheat:
-    invincibility = False
-    level = False
-    ghost_freeze = False
-    extra_lives = False
-    increased_speed = False
-
-    @staticmethod
-    def set_invincibility():
-        Cheat.invincibility = not Cheat.invincibility
-
-    @staticmethod
-    def set_increased_speed():
-        Cheat.increased_speed = not Cheat.increased_speed
-
-    @staticmethod
-    def set_ghost_freeze():
-        Cheat.ghost_freeze = not Cheat.ghost_freeze
-
-    @staticmethod
-    def set_level():
-        Cheat.level = not Cheat.level
-
-    @staticmethod
-    def set_extra_lives():
-        Cheat.extra_lives = not Cheat.extra_lives
+from src.helpers import Widget, Playable, Controller, Cheat
 
 
 class Reward(Widget, Playable):

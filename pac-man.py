@@ -13,6 +13,8 @@ class Pacman:
         Leaderboard.loadJSONFile(Configuration.get('highscore_filename', 'highscore.json'))
         self.visual: Visualizer = Visualizer()
         self.gameplay: Gameplay = Gameplay()
+        self.gameplay.onGameWin = self.win
+        self.gameplay.onGameLose = self.lose
 
     def launch(self) -> None:
         self.visual.clear()
@@ -31,8 +33,6 @@ class Pacman:
             'hearts': Configuration.get('lives', 3),
             'expired_at': time() + Configuration.get('level_max_time', 60),
         })
-        self.gameplay.onGameWin = self.win
-        self.gameplay.onGameLose = self.lose
         self.gameplay.build()
         self.visual.clear()
         self.visual.scenes.append(
@@ -89,7 +89,6 @@ class Pacman:
 
 if __name__ == '__main__':
     try:
-        # sys.setrecursionlimit(8000)
         platform = Pacman()
         platform.launch()
         platform.visual.render()

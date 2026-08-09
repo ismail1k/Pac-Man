@@ -1,4 +1,8 @@
-from random import random
+"""
+this module contains the main gameplay logic and state management for the game.
+"""
+
+from random import random, shuffle
 from time import time, sleep
 from typing import Callable
 from src.parsing import Configuration
@@ -46,11 +50,12 @@ class Gameplay(VContainer):
         self.states.update({'hearts': self.states.get('hearts') - 1})
         self.states.update({'freeze': True})
         if self.states.get('hearts') <= 0:
-            return self.onGameWin()
+            return self.onGameLose()
         sleep(1.5)
         self.states.update({'freeze': False})
         player.spawn()
-        opponent.spawn(*opponent.init_cell)
+        for opp in self.opponents:
+            opp.spawn(*opp.init_cell)
 
     def onPlayerClaimReward(self, player: Player, reward: Reward) -> None:
         score: int = Configuration.get('points_per_pacgum', 5)
@@ -81,6 +86,7 @@ class Gameplay(VContainer):
         rows = len(self.canvas.maze)
         cols = len(self.canvas.maze[0])
         self.rewards.clear()
+        positions = []
         for y in range(rows):
             for x in range(cols):
                 if self.canvas.maze[y][x] == 15:
@@ -90,15 +96,32 @@ class Gameplay(VContainer):
                     special = True
                 if (x, y) in [(cols - 1, 0), (0, rows - 1)]:
                     special = True
+                if special is False:
+                    positions.append((x, y))
+                    continue
                 reward: Reward = Reward(self.canvas, special=special)
                 reward.spawn(x, y)
                 self.rewards.append(reward)
+        shuffle(positions)
+        for pos in positions[:Configuration.get("pacgum", len(positions))]:
+            reward = Reward(self.canvas)
+            reward.spawn(*pos)
+            self.rewards.append(reward)
+
         self.player.reset()
         self.player.spawn()
         self.elements = [self.canvas, *self.rewards, *self.opponents, self.player]
         self.adjust()
 
     def render(self, visual: Visualizer) -> None:
+        if Cheat.level:
+            self.onGameLevelUp()
+            Cheat.level = False
+        if Cheat.extra_lives:
+            if self.states["hearts"] < Configuration.get('lives'):
+                self.states["hearts"] += 1
+            Cheat.extra_lives = False
+
         if self.states.get('expired_at', time() - 1) <= time():
             self.onGameLose()
         self.canvas.render(visual)

@@ -74,7 +74,7 @@ class GameplayScreen(Scene, Controller):
 
     def _hearts(self) -> Widget:
         attempts: list[Widget] = []
-        for index in range(Configuration.get('lives', 3)):
+        for index in range(self.gameplay.states.get('hearts', 0)):
             image: VImage = VImage("assets/images/player_open.png", size=(40, 40))
             image.visible = partial(lambda index: self.gameplay.states.get('hearts') > index, index)
             attempts.append(image)
@@ -132,19 +132,25 @@ class SaveScoreScreen(Scene, Controller):
     def __init__(self, label: str, score: int, confirm: Callable) -> None:
         Controller.__init__(self)
         value: str = ""
+
         def _add(key) -> None:
             nonlocal value
+            if len(value) >= 10:
+                return None
             if key == pygame.K_SPACE:
                 value = value + " "
             else:
                 value = value + pygame.key.name(key)
+
         def _remove() -> None:
             nonlocal value
             value = value[:-1]
+
         def _confirm() -> None:
             nonlocal value
             Leaderboard.update(value, score)
-            confirm()
+            if len(value) > 2:
+                confirm()
 
         self.onClick(self.INPUT_KEYBOARD, _add)
         self.onClick(self.ACTION_BACK, _remove)

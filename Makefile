@@ -1,4 +1,4 @@
-export PIP_CACHE_DIR=/tmp/iandalou/cache
+export PIP_CACHE_DIR=/tmp/pip_cache
 
 PYTHON = python3.10
 

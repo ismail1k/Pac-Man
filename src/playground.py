@@ -1,5 +1,5 @@
 """
-this module contains the main gameplay logic and state management for the game.
+Pac-Man game engine with level progression, collision handling, and scoring.
 """
 
 from random import random, shuffle
@@ -13,7 +13,12 @@ from src.helpers import Audio, Cheat
 
 
 class Gameplay(VContainer):
+    """
+    Main game container managing maze, entities, state, and gameplay loop.
+    """
+
     def __init__(self) -> None:
+        """Initialize game state, canvas, player, and event callbacks."""
         VContainer.__init__(self, [])
         self.onGameWin: Callable = lambda: None
         self.onGameLose: Callable = lambda: None
@@ -28,6 +33,7 @@ class Gameplay(VContainer):
         )
 
     def onGameLevelUp(self) -> None:
+        """Advance to next level or trigger win if max level reached."""
         level: int = self.states.get('level')
         if level >= 10:
             self.onGameWin()
@@ -38,6 +44,7 @@ class Gameplay(VContainer):
         self.build()
 
     def onPlayerEaten(self, player: Player, opponent: Ghost) -> None:
+        """Handle player-ghost collision: eat scared ghost or lose a life."""
         if opponent.scared_at + 15 > time():
             cooldown: int = int(abs(time() - opponent.scared_at - 15))
             self.states.update({'score': self.states.get('score') +
@@ -58,6 +65,7 @@ class Gameplay(VContainer):
             opp.spawn(*opp.init_cell)
 
     def onPlayerClaimReward(self, player: Player, reward: Reward) -> None:
+        """Process reward collection and update score."""
         score: int = Configuration.get('points_per_pacgum', 5)
         if reward.special:
             score = Configuration.get('points_per_super_pacgum', 25)
@@ -67,6 +75,7 @@ class Gameplay(VContainer):
         self.states.update({'score': self.states.get('score') + score})
 
     def build(self) -> None:
+        """Generate maze, spawn entities, and reset positions for current level."""
         self.canvas.generate(
             size=(
                 Configuration.get('width', 18),
@@ -114,6 +123,10 @@ class Gameplay(VContainer):
         self.adjust()
 
     def render(self, visual: Visualizer) -> None:
+        """
+        Execute game frame: apply cheats, check timers,
+        render and collide entities.
+        """
         if Cheat.level:
             self.onGameLevelUp()
             Cheat.level = False

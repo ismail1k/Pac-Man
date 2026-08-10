@@ -1,3 +1,4 @@
+"""Configuration and leaderboard management utilities."""
 import json
 from typing import Any
 from src.exceptions import ParsingException
@@ -5,10 +6,13 @@ from src.helpers import Utils
 
 
 class Configuration:
+    """Manages application configuration loaded from a JSON file."""
+
     _data: dict = {}
 
     @staticmethod
     def loadJSONFile(filename: str) -> None:
+        """Load configuration data from a JSON file."""
         try:
             with open(filename, 'r') as file:
                 content: str = ""
@@ -24,14 +28,18 @@ class Configuration:
 
     @staticmethod
     def get(key: str, default: Any = None) -> Any:
+        """Return a configuration value or its default value."""
         return Configuration._data.get(key, default)
 
 
 class Leaderboard:
+    """Manages player scores loaded from and saved to a JSON file."""
+
     _data: list = []
 
     @staticmethod
     def loadJSONFile(filename: str) -> None:
+        """Load leaderboard data from a JSON file."""
         try:
             with open(filename, 'r') as file:
                 content: str = ""
@@ -47,6 +55,7 @@ class Leaderboard:
 
     @staticmethod
     def highscores() -> list:
+        """Return leaderboard scores sorted from highest to lowest."""
         items: list[dict] = []
         for key, value in Leaderboard._data.items():
             items.append({'player': key, 'score': value})
@@ -58,6 +67,7 @@ class Leaderboard:
 
     @staticmethod
     def update(name: str, score: int) -> None:
+        """Update a player's score and save the leaderboard."""
         Leaderboard._data.update({name: score})
         Utils.save(
             Configuration.get('highscore_filename', 'highscore.json'),

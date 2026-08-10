@@ -1,3 +1,7 @@
+"""
+UI scene definitions for menus, gameplay HUD, leaderboard, and instructions.
+"""
+
 import pygame
 import sys
 from abc import ABC
@@ -12,20 +16,27 @@ from src.playground import Gameplay
 
 
 class Scene(Widget, ABC):
+    """Base scene wrapping a widget tree for rendering."""
+
     def __init__(self, scene: Widget) -> None:
+        """Initialize scene with a root widget."""
         Widget.__init__(self, pygame.Surface(Visualizer.resolution))
         self._scene: Widget = scene
 
     def render(self, visual: Visualizer) -> None:
+        """Render the wrapped scene."""
         self._scene.render(visual)
 
 
 class MainScreen(Scene):
+    """Main menu with logo and navigation options."""
+
     def __init__(self,
                  play: Callable,
                  leaderboard: Callable,
                  instructions: Callable,
                  ) -> None:
+        """Build main menu with play, leaderboard, instructions and exit options."""
         Audio.menu()
         super().__init__(
             VContainer([
@@ -41,7 +52,10 @@ class MainScreen(Scene):
 
 
 class GameplayScreen(Scene, Controller):
+    """In-game HUD overlay showing score, lives, timer and level."""
+
     def __init__(self, gameplay: Gameplay, pause: Callable) -> None:
+        """Assemble gameplay view with HUD elements and pause binding."""
         Controller.__init__(self)
         self.gameplay: Gameplay = gameplay
         self.onClick(self.ACTION_PAUSE, lambda: pause())
@@ -73,6 +87,7 @@ class GameplayScreen(Scene, Controller):
         )
 
     def _hearts(self) -> Widget:
+        """Return a row of heart icons reflecting remaining lives."""
         attempts: list[Widget] = []
         for index in range(self.gameplay.states.get('hearts', 0)):
             image: VImage = VImage("assets/images/player_open.png", size=(40, 40))
@@ -81,14 +96,17 @@ class GameplayScreen(Scene, Controller):
         return VContainer(attempts, inline=True)
 
     def render(self, visual: Visualizer) -> None:
+        """Process controller input and render the gameplay scene."""
         self.listenControllerEvents(visual.events)
         Scene.render(self, visual)
 
 
 class PauseScreen(Scene):
+    """Pause overlay with resume, menu, and exit options."""
+
     def __init__(self, resume: Callable, launch: Callable) -> None:
-        Scene.__init__(self,
-            VContainer(
+        """Build pause menu with resume, main menu and exit choices."""
+        Scene.__init__(self, VContainer(
                 [
                     VImage("assets/images/pac-man-logo.png", size=(289 * 2, 70 * 2)),
                     VSelect([
@@ -103,7 +121,10 @@ class PauseScreen(Scene):
 
 
 class LeaderboardScreen(Scene):
+    """High scores display with navigation back to menu."""
+
     def __init__(self, back: Callable) -> None:
+        """Build leaderboard view listing top scores."""
         image: VImage = VImage("assets/images/pac-man-logo.png", size=(289 * 2, 70 * 2))
         image.padding['bottom'] = 35
         players: list[VText] = []
@@ -129,7 +150,10 @@ class LeaderboardScreen(Scene):
 
 
 class SaveScoreScreen(Scene, Controller):
+    """Score entry screen with keyboard input for player name."""
+
     def __init__(self, label: str, score: int, confirm: Callable) -> None:
+        """Build score save screen with text input and confirm action."""
         Controller.__init__(self)
         value: str = ""
 
@@ -178,12 +202,16 @@ class SaveScoreScreen(Scene, Controller):
         )
 
     def render(self, visual: Visualizer) -> None:
+        """Process keyboard input and render the save score scene."""
         self.listenControllerEvents(visual.events)
         Scene.render(self, visual)
 
 
 class InstructionScreen(Scene):
+    """How-to-play screen showing controls, rules and scoring."""
+
     def __init__(self, back: Callable):
+        """Build instructions view with gameplay guide and back button."""
         INSTRUCTIONS = [
             "HOW TO PLAY:",
             "",
@@ -218,6 +246,6 @@ class InstructionScreen(Scene):
             elements.append(VText(line, position=(0, margin)))
             margin += 10
         elements.append(VSelect([VOption("Back", onselect=lambda: back())],
-                      position=(0, margin + 40), inline=True))
+                        position=(0, margin + 40), inline=True))
 
         super().__init__(VContainer(elements, fullscreen=True))

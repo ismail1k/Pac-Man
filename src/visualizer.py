@@ -1,14 +1,20 @@
+"""
+Pygame-based visualizer managing fullscreen rendering,
+scene stack, and main loop.
+"""
+
 import pygame
-from typing import Any, Callable
-from src.parsing import Configuration
-from src.helpers import Widget, Controller
+from src.helpers import Widget
 
 
 class Visualizer:
+    """Fullscreen renderer handling scene lifecycle, events, and frame timing."""
+
     framerate: int = 60
     resolution: tuple = (1920, 1080)
 
     def __init__(self) -> None:
+        """Initialize pygame, set fullscreen resolution, and create display."""
         pygame.init()
         info = pygame.display.Info()
         Visualizer.resolution = (info.current_w, info.current_h)
@@ -16,12 +22,17 @@ class Visualizer:
         self.scenes: list[Widget] = []
 
     def clear(self) -> None:
+        """Destroy all scenes and empty the scene stack."""
         for element in self.scenes:
             if hasattr(element, 'onDestroy'):
                 element.onDestroy()
         self.scenes.clear()
 
     def render(self) -> None:
+        """
+        Run the main game loop: poll events, clear screen,
+        render scenes, and flip display.
+        """
         runtime = True
         clock = pygame.time.Clock()
         pygame.mouse.set_visible(False)

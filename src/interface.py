@@ -1,13 +1,20 @@
+"""
+Visual components and containers used to build the application's interface.
+"""
 import pygame
 from typing import Any, Callable
-from abc import ABC, abstractmethod
-from src.parsing import Configuration
 from src.helpers import Controller
 from src.visualizer import Visualizer, Widget
 
 
 class VImage(Widget):
+    """Widget that displays an image loaded from a file."""
+
     def __init__(self, path: str, position: tuple[int, int] = (0, 0), size: tuple[int, int] = (0, 0), visible: Callable | bool = True) -> None:
+        """
+        Initialize an image widget with its path, position,
+        size, and visibility.
+        """
         surface = pygame.image.load(path).convert_alpha()
         if size[0] and size[1]:
             surface = pygame.transform.smoothscale(surface, size)
@@ -16,7 +23,10 @@ class VImage(Widget):
 
 
 class VText(Widget):
+    """Widget that displays static or dynamically generated text."""
+
     def __init__(self, content: str | Callable, position: tuple[int, int] = (0, 0), color: tuple[int, int, int] = (255, 255, 255)) -> None:
+        """Initialize a text widget with its content, position, and color."""
         self._content: str | Callable = content
         self.font = pygame.font.Font("assets/fonts/PressStart2P-Regular.ttf", 24)
         super().__init__(self.font.render(self.content, True, color), position)
@@ -24,21 +34,27 @@ class VText(Widget):
 
     @property
     def content(self) -> bool:
+        """Return the current text content."""
         if isinstance(self._content, Callable):
             return self._content()
         return self._content
 
     @content.setter
     def content(self, content: bool | Callable) -> None:
+        """Set the text content or content callback."""
         self._content = content
 
     def render(self, visual: Any) -> None:
+        """Render the current text content on the visualizer."""
         self.surface = self.font.render(self.content, True, self.color)
         visual.screen.blit(self.surface, self.position)
 
 
 class VField(Widget):
+    """Widget that displays text inside a bordered field."""
+
     def __init__(self, content: str | Callable, position: tuple[int, int] = (0, 0)) -> None:
+        """Initialize a field widget with its content and position."""
         self._content: str | Callable = content
         self.font = pygame.font.Font("assets/fonts/PressStart2P-Regular.ttf", 24)
         super().__init__(self.font.render(self.content, True, (255, 255, 255)), position)
@@ -46,6 +62,7 @@ class VField(Widget):
 
     @property
     def surface(self) -> pygame.Surface:
+        """Create and return the rendered field surface."""
         surface = pygame.Surface(
             self.size,
             pygame.SRCALPHA
@@ -67,20 +84,26 @@ class VField(Widget):
 
     @property
     def content(self) -> bool:
+        """Return the current field content."""
         if isinstance(self._content, Callable):
             return self._content()
         return self._content
 
     @content.setter
     def content(self, content: bool | Callable) -> None:
+        """Set the field content or content callback."""
         self._content = content
 
     def render(self, visual: Any) -> None:
+        """Render the field on the visualizer."""
         visual.screen.blit(self.surface, self.position)
 
 
 class VOption(Widget):
+    """Widget representing a selectable option."""
+
     def __init__(self, label: str, onselect: Callable, position: tuple[int, int] = (0, 0)) -> None:
+        """Initialize an option with its label and selection callback."""
         self.font = pygame.font.Font("assets/fonts/PressStart2P-Regular.ttf", 28)
         super().__init__(self.font.render(label, True, (255, 255, 255)), position)
         self.label: str = label
@@ -89,6 +112,7 @@ class VOption(Widget):
         self.padding.update({'top': 7, 'bottom': 7})
 
     def render(self, visual: Any) -> None:
+        """Render the option using its current focus state."""
         color: tuple[int, int, int] = (255, 255, 255)
         if self.focus:
             color: tuple[int, int, int] = (255, 0, 0)
@@ -96,7 +120,10 @@ class VOption(Widget):
 
 
 class VSelect(Widget, Controller):
+    """Widget that allows navigation and selection between multiple options."""
+
     def __init__(self, options: list[VOption], position: tuple[int, int] = (0, 0), visible: bool | Callable = True, inline: bool = False) -> None:
+        """Initialize a selection widget with its options and layout."""
         Widget.__init__(self, pygame.Surface((0, 0)), position)
         Controller.__init__(self)
         self.options: list[VOption] = options
@@ -107,6 +134,7 @@ class VSelect(Widget, Controller):
         self.controller()
 
     def adjust(self) -> None:
+        """Calculate the size and position of the selection options."""
         offset_x, offset_y = self.position
         for option in self.options:
             option.offset_x = offset_x
@@ -124,6 +152,7 @@ class VSelect(Widget, Controller):
                     self.width = option_width
 
     def controller(self) -> None:
+        """Configure controller actions for navigating and selecting options."""
         def next() -> None:
             if self.focus > 0:
                 self.focus -= 1
@@ -144,6 +173,7 @@ class VSelect(Widget, Controller):
         self.onClick(self.ACTION_CONFIRM, lambda: select())
 
     def render(self, visual: Any) -> None:
+        """Render the options and process controller events."""
         self.listenControllerEvents(visual.events)
         for index, option in enumerate(self.options):
             option.focus = False
@@ -152,11 +182,15 @@ class VSelect(Widget, Controller):
             option.render(visual)
 
     def onDestroy(self) -> None:
+        """Remove all controller events associated with the selection."""
         self.destroyControllerEvents()
 
 
 class VContainer(Widget):
+    """Widget that groups and arranges multiple visual elements."""
+
     def __init__(self, elements: list[Any], position: tuple[int, int] = (0, 0), visible: bool | Callable = True, absolute: bool = False, fullscreen: bool = False, inline: bool = False) -> None:
+        """Initialize a container with its elements and layout settings."""
         super().__init__(pygame.Surface((0, 0)), position)
         self.elements: list[Any] = elements
         self.visible: bool | Callable = visible
@@ -166,6 +200,7 @@ class VContainer(Widget):
         self.adjust()
 
     def adjust(self) -> None:
+        """Calculate the container size and position its elements."""
         offset_x, offset_y = self.position
         for element in self.elements:
             element.offset_x = offset_x
@@ -198,11 +233,13 @@ class VContainer(Widget):
                 element.adjust()
 
     def render(self, visual: Any) -> None:
+        """Render all elements contained in the container."""
         if self.visible:
             for element in self.elements:
                 element.render(visual)
 
     def OnDestroy(self) -> None:
+        """Destroy all contained elements and clear the container."""
         for element in self.elements:
             element.OnDestroy()
         self.elements.clear()

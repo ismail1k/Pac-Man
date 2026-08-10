@@ -10,13 +10,13 @@ from src.parsing import Configuration, Leaderboard
 from src.visualizer import Visualizer
 from src.playground import Gameplay
 from src.screens import (
-    MainScreen,
-    GameplayScreen,
-    PauseScreen,
-    LeaderboardScreen,
-    SaveScoreScreen,
-    InstructionScreen,
-)
+                            MainScreen,
+                            GameplayScreen,
+                            PauseScreen,
+                            LeaderboardScreen,
+                            SaveScoreScreen,
+                            InstructionScreen,
+                        )
 
 
 class Pacman:

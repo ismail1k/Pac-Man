@@ -8,7 +8,9 @@ from src.helpers import Widget
 
 
 class Visualizer:
-    """Fullscreen renderer handling scene lifecycle, events, and frame timing."""
+    """
+    Fullscreen renderer handling scene lifecycle, events, and frame timing.
+    """
 
     framerate: int = 60
     resolution: tuple = (1920, 1080)

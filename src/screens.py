@@ -211,7 +211,9 @@ class InstructionScreen(Scene):
     """How-to-play screen showing controls, rules and scoring."""
 
     def __init__(self, back: Callable):
-        """Build instructions view with gameplay guide and back button."""
+        """
+        Build instructions view with gameplay guide and back button.
+        """
         INSTRUCTIONS = [
             "HOW TO PLAY:",
             "",
@@ -235,8 +237,10 @@ class InstructionScreen(Scene):
             "",
             "SCORING",
             f"- Pac-gum: {Configuration.get('points_per_pacgum', 5)} points",
-            f"- Super pac-gum: {Configuration.get('points_per_super_pacgum', 25)} points",
-            f"- Eating a scared ghost: {Configuration.get('points_per_ghost', 100)} points",
+            "- Super pac-gum: "
+            f"{Configuration.get('points_per_super_pacgum', 25)} points",
+            "- Eating a scared ghost: "
+            f"{Configuration.get('points_per_ghost', 100)} points",
             "",
             "Good luck!"
         ]

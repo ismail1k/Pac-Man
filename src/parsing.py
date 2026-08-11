@@ -35,7 +35,7 @@ class Configuration:
 class Leaderboard:
     """Manages player scores loaded from and saved to a JSON file."""
 
-    _data: list = []
+    _data: dict = {}
 
     @staticmethod
     def loadJSONFile(filename: str) -> None:

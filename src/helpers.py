@@ -80,8 +80,8 @@ class Widget(ABC):
     @property
     def visible(self) -> bool:
         """Return whether the widget is currently visible."""
-        if isinstance(self._visible, Callable):
-            return self._visible()
+        if callable(self._visible):
+            return True if self._visible() else False
         return self._visible
 
     @visible.setter
@@ -107,6 +107,8 @@ class Playable(ABC):
         self.speed: float = 1.3
         self.direction: str = ''
         self._cache: dict = {}
+        self.left: int = 0
+        self.top: int = 0
 
     def reset(self) -> None:
         """Clear the cached movement state."""
@@ -114,7 +116,11 @@ class Playable(ABC):
 
     def thread(self) -> None:
         """Update the object's movement and handle its behavior."""
-        if not self.visible or self.states.get('pause') or self.states.get('freeze'):
+        if (
+            not self.visible
+            or self.states.get('pause')
+            or self.states.get('freeze')
+        ):
             return None
 
         if self.direction:
@@ -124,16 +130,16 @@ class Playable(ABC):
             if abs(self.left - target_x) <= self.speed:
                 self.left = target_x
             elif self.left < target_x:
-                self.left += self.speed
+                self.left += int(self.speed)
             elif self.left > target_x:
-                self.left -= self.speed
+                self.left -= int(self.speed)
 
             if abs(self.top - target_y) <= self.speed:
                 self.top = target_y
             elif self.top < target_y:
-                self.top += self.speed
+                self.top += int(self.speed)
             elif self.top > target_y:
-                self.top -= self.speed
+                self.top -= int(self.speed)
 
             if self.left == target_x and self.top == target_y:
                 self.cell = target
@@ -145,7 +151,10 @@ class Playable(ABC):
 
                 if direction and self.canvas.navigate(self.cell, direction):
                     self.direction = direction
-                elif self.direction and self.canvas.navigate(self.cell, self.direction):
+                elif (
+                    self.direction
+                    and self.canvas.navigate(self.cell, self.direction)
+                ):
                     pass
                 else:
                     self.direction = ""
@@ -154,8 +163,8 @@ class Playable(ABC):
             if hasattr(self, 'behaviour'):
                 self.behaviour()
 
-            direction: str | None = self._cache.get('direction')
-            target: tuple[int, int] | None = self.canvas.navigate(
+            direction = self._cache.get('direction')
+            target = self.canvas.navigate(
                 self.cell, direction
             )
 
@@ -267,7 +276,7 @@ class Controller(ABC):
                     trigger(pygame.K_LEFT)
 
     def destroyControllerEvents(self, actions: list[int] = []) -> None:
-        """Remove callbacks for the specified actions or clear all callbacks."""
+        """Remove callbacks for the specified actions or clear callbacks."""
         if len(actions):
             condition: Callable = lambda event, _: event not in actions
             self.__events = list(filter(condition, self.__events))

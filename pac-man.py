@@ -78,7 +78,7 @@ class Pacman:
         self.visual.scenes.append(
             SaveScoreScreen(
                 "Congratulation, You win!",
-                self.gameplay.states.get("score"),
+                self.gameplay.states.get("score", 0),
                 confirm=self.leaderboard,
             )
         )
@@ -89,7 +89,7 @@ class Pacman:
         self.visual.scenes.append(
             SaveScoreScreen(
                 "You lose :(",
-                self.gameplay.states.get("score"),
+                self.gameplay.states.get("score", 0),
                 confirm=self.leaderboard,
             )
         )

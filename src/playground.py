@@ -34,7 +34,7 @@ class Gameplay(VContainer):
 
     def onGameLevelUp(self) -> None:
         """Advance to next level or trigger win if max level reached."""
-        level: int = self.states.get('level')
+        level: int = self.states.get('level', 1)
         if level >= 10:
             self.onGameWin()
         self.states.update({
@@ -45,6 +45,8 @@ class Gameplay(VContainer):
 
     def onPlayerEaten(self, player: Player, opponent: Ghost) -> None:
         """Handle player-ghost collision: eat scared ghost or lose a life."""
+        if not opponent.visible:
+            return None
         if opponent.scared_at + 15 > time():
             cooldown: int = int(abs(time() - opponent.scared_at - 15))
             self.states.update({'score': self.states.get('score') +
@@ -54,10 +56,11 @@ class Gameplay(VContainer):
             return None
         if Cheat.invincibility:
             return None
-        self.states.update({'hearts': self.states.get('hearts') - 1})
+        self.states.update({'hearts': self.states.get('hearts', 0) - 1})
         self.states.update({'freeze': True})
-        if self.states.get('hearts') <= 0:
-            return self.onGameLose()
+        if self.states.get('hearts', 0) <= 0:
+            self.onGameLose()
+            return None
         sleep(1.5)
         self.states.update({'freeze': False})
         player.spawn()
@@ -72,16 +75,17 @@ class Gameplay(VContainer):
             Audio.coin()
             for opponent in self.opponents:
                 opponent.scared_at = time()
-        self.states.update({'score': self.states.get('score') + score})
+        self.states.update({'score': self.states.get('score', 0) + score})
 
     def build(self) -> None:
-        """Generate maze, spawn entities, and reset positions for current level."""
+        """Generate maze, spawn entities, and reset positions."""
         self.canvas.generate(
             size=(
                 Configuration.get('width', 18),
                 Configuration.get('height', 12)
             ),
-            seed=Configuration.get('seed', random()) + self.states.get('level', 1)
+            seed=Configuration.get('seed', random()) +
+            self.states.get('level', 1)
         )
         self.opponents.clear()
         for index, cell in enumerate([(0, 0), (-1, 0), (0, -1), (-1, -1)]):
@@ -119,7 +123,9 @@ class Gameplay(VContainer):
 
         self.player.reset()
         self.player.spawn()
-        self.elements = [self.canvas, *self.rewards, *self.opponents, self.player]
+        self.elements = [
+            self.canvas, *self.rewards, *self.opponents, self.player
+        ]
         self.adjust()
 
     def render(self, visual: Visualizer) -> None:

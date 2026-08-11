@@ -19,7 +19,12 @@ class Reward(Widget, Playable):
         "assets/images/coin_special.png",
     ]
 
-    def __init__(self, canvas: Any, states: dict = {}, special: bool = False) -> None:
+    def __init__(
+        self,
+        canvas: Any,
+        states: dict = {},
+        special: bool = False
+    ) -> None:
         """Initialize a reward with its canvas, state, and special type."""
         size: tuple = (30, 30) if special else (15, 15)
         texture: str = self.textures[1 if special else 0]
@@ -48,10 +53,22 @@ class Player(Widget, Playable, Controller):
         Widget.__init__(self, pygame.Surface((0, 0)))
         Playable.__init__(self, canvas, states)
         Controller.__init__(self)
-        self.onClick(self.ACTION_UP, lambda: self._cache.update({'direction': "N"}))
-        self.onClick(self.ACTION_DOWN, lambda: self._cache.update({'direction': "S"}))
-        self.onClick(self.ACTION_LEFT, lambda: self._cache.update({'direction': "W"}))
-        self.onClick(self.ACTION_RIGHT, lambda: self._cache.update({'direction': "E"}))
+        self.onClick(
+            self.ACTION_UP,
+            lambda: self._cache.update({'direction': "N"})
+        )
+        self.onClick(
+            self.ACTION_DOWN,
+            lambda: self._cache.update({'direction': "S"})
+        )
+        self.onClick(
+            self.ACTION_LEFT,
+            lambda: self._cache.update({'direction': "W"})
+        )
+        self.onClick(
+            self.ACTION_RIGHT,
+            lambda: self._cache.update({'direction': "E"})
+        )
 
         # this clicks for the cheat mode
         self.onClick([pygame.K_1], Cheat.set_invincibility)
@@ -61,14 +78,14 @@ class Player(Widget, Playable, Controller):
         self.onClick([pygame.K_5], Cheat.set_extra_lives)
 
         self.padding.update({'left': 15, 'bottom': 15, 'right': 15, 'top': 15})
-        self.speed: float = 2.0
+        self.speed: float = 8.0
 
         self.surface0 = pygame.image.load(self.textures[0]).convert_alpha()
         self.surface1 = pygame.image.load(self.textures[1]).convert_alpha()
 
     @property
     def surface(self) -> pygame.Surface:
-        """Return the player's current surface based on its direction and state."""
+        """Return the player's surface based on its direction and state."""
         mouth: int = 0
         angle: int = 0
         flip: bool = False
@@ -96,6 +113,12 @@ class Player(Widget, Playable, Controller):
         if Cheat.invincibility:
             surface.set_alpha(128)
         return pygame.transform.rotate(surface, angle)
+
+    @surface.setter
+    def surface(self, surface: pygame.Surface) -> None:
+        """Set the widget surface and update its dimensions."""
+        self.width, self.height = surface.get_size()
+        self._surface = surface
 
     def onDestroy(self) -> None:
         """Remove all controller events associated with the player."""
@@ -128,6 +151,7 @@ class Ghost(Widget, Playable):
         """Initialize the ghost with its canvas and movement state."""
         Widget.__init__(self, pygame.Surface((0, 0)))
         Playable.__init__(self, canvas, states)
+        self.player: Player | None = None
         self.scared_at: float = 0.0
         self.init_cell: tuple[int, int] = (0, 0)
         self.padding.update({'left': 15, 'bottom': 15, 'right': 15, 'top': 15})
@@ -147,7 +171,13 @@ class Ghost(Widget, Playable):
                         self.textures[self.type]).convert_alpha()
         return pygame.transform.smoothscale(surface, (35, 35))
 
-    def behaviour(self):
+    @surface.setter
+    def surface(self, surface: pygame.Surface) -> None:
+        """Set the widget surface and update its dimensions."""
+        self.width, self.height = surface.get_size()
+        self._surface = surface
+
+    def behaviour(self) -> None:
         """Determine the ghost's next movement direction."""
         if Cheat.ghost_freeze:
             self._cache["direction"] = ""
@@ -181,12 +211,16 @@ class Ghost(Widget, Playable):
             else:
                 self._cache["direction"] = ""
 
-        player = self.player
+        player: Player | None = self.player
         if player is None or not player.visible:
             return wander()
 
         scared: bool = self.scared_at + 15 > time()
-        distance: int = abs(self.cell[0] - player.cell[0]) + abs(self.cell[1] - player.cell[1])
+        distance: int = abs(
+            self.cell[0] - player.cell[0]
+        ) + abs(
+            self.cell[1] - player.cell[1]
+        )
 
         if scared:
             neighbors = self.canvas.neighbors(self.cell)
@@ -202,7 +236,11 @@ class Ghost(Widget, Playable):
                 target = self.canvas.navigate(self.cell, direction)
                 if target is None:
                     continue
-                target_distance = abs(target[0] - player.cell[0]) + abs(target[1] - player.cell[1])
+                target_distance = abs(
+                    target[0] - player.cell[0]
+                ) + abs(
+                    target[1] - player.cell[1]
+                )
                 if target_distance > best_distance:
                     best_distance = target_distance
                     best_direction = direction
@@ -214,14 +252,23 @@ class Ghost(Widget, Playable):
             if path and len(path) > 1:
                 dx = path[1][0] - self.cell[0]
                 dy = path[1][1] - self.cell[1]
-                direction = {(0, -1): 'N', (1, 0): 'E', (0, 1): 'S', (-1, 0): 'W'}.get((dx, dy), '')
+                direction = {
+                    (0, -1): 'N',
+                    (1, 0): 'E',
+                    (0, 1): 'S',
+                    (-1, 0): 'W'
+                }.get((dx, dy), '')
                 if direction:
                     self._cache["direction"] = direction
                     return
 
         wander()
 
-    def _find_path(self, start: tuple[int, int], goal: tuple[int, int]) -> list[tuple[int, int]] | None:
+    def _find_path(
+        self,
+        start: tuple[int, int],
+        goal: tuple[int, int]
+    ) -> list[tuple[int, int]] | None:
         """Find a path between two cells using breadth-first search."""
         from collections import deque
         if start == goal:
@@ -285,9 +332,9 @@ class Canvas(Widget):
             0xE: "wall_U_down.png",
         }
         surface = pygame.Surface((cols * cell_size, rows * cell_size))
-        tile_cache = {}
+        tile_cache: dict[str, pygame.Surface | None] = {}
 
-        def get_tile(filename):
+        def get_tile(filename: str) -> pygame.Surface | None:
             """Load and cache a maze tile image."""
             if filename not in tile_cache:
                 path = os.path.join(tile_dir, filename)
@@ -296,7 +343,9 @@ class Canvas(Widget):
                 else:
                     img = pygame.image.load(path).convert_alpha()
                     if img.get_size() != (cell_size, cell_size):
-                        img = pygame.transform.smoothscale(img, (cell_size, cell_size))
+                        img = pygame.transform.smoothscale(
+                            img, (cell_size, cell_size)
+                        )
                     tile_cache[filename] = img
             return tile_cache[filename]
 
@@ -306,8 +355,10 @@ class Canvas(Widget):
                     continue
                 pos = (x * cell_size, y * cell_size)
                 if cell == 0xF:
-                    for filename in ("wall_horizontal.png", "wall_vertical.png"):
-                        tile = get_tile(filename)
+                    for fn in (
+                        "wall_horizontal.png", "wall_vertical.png"
+                    ):
+                        tile = get_tile(fn)
                         if tile is not None:
                             surface.blit(tile, pos)
                     continue
@@ -319,6 +370,12 @@ class Canvas(Widget):
                     surface.blit(tile, pos)
         return surface
 
+    @surface.setter
+    def surface(self, surface: pygame.Surface) -> None:
+        """Set the widget surface and update its dimensions."""
+        self.width, self.height = surface.get_size()
+        self._surface = surface
+
     def generate(self, size: tuple[int, int], seed: int = 42) -> None:
         """Generate a maze with the specified size and seed."""
         generator = MazeGenerator(size=size, seed=seed)
@@ -328,9 +385,9 @@ class Canvas(Widget):
             (len(self.maze) * self.cell_size) + self.thickness
         )
 
-    def neighbors(self, cell: tuple[int, int]) -> list[tuple[int, int]]:
+    def neighbors(self, cell: tuple[int, int]) -> list[str]:
         """Return the valid directions available from a maze cell."""
-        neighbors: list[tuple[int, int]] = []
+        neighbors: list[str] = []
 
         def validate(x: int, y: int) -> bool:
             """Check whether the specified maze coordinates are valid."""
@@ -341,18 +398,22 @@ class Canvas(Widget):
             return True
 
         cell_x, cell_y = cell
-        cell: int = self.maze[cell_y][cell_x]
-        if cell & 1 == 0 and validate(cell_x, cell_y - 1):
+        cell_v: int = self.maze[cell_y][cell_x]
+        if cell_v & 1 == 0 and validate(cell_x, cell_y - 1):
             neighbors.append('N')
-        if cell & 2 == 0 and validate(cell_x + 1, cell_y):
+        if cell_v & 2 == 0 and validate(cell_x + 1, cell_y):
             neighbors.append('E')
-        if cell & 4 == 0 and validate(cell_x, cell_y + 1):
+        if cell_v & 4 == 0 and validate(cell_x, cell_y + 1):
             neighbors.append('S')
-        if cell & 8 == 0 and validate(cell_x - 1, cell_y):
+        if cell_v & 8 == 0 and validate(cell_x - 1, cell_y):
             neighbors.append('W')
         return neighbors
 
-    def navigate(self, cell: tuple[int, int], direction: str) -> tuple[int, int] | None:
+    def navigate(
+        self,
+        cell: tuple[int, int],
+        direction: str
+    ) -> tuple[int, int] | None:
         """Return the destination cell if movement is possible."""
         cell_x, cell_y = cell
         cell_value: int = self.maze[cell_y][cell_x]

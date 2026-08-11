@@ -1,9 +1,5 @@
 # Project Management — Pac-Man
 
-> ⚠️ This file is a **template filled with example content**. Replace the dates,
-> tasks, decisions, risks and test results with what actually happened on your
-> project — you may be asked to justify any of this during the defense.
-
 **Team:** ykhalouk, iandalou
 
 ---
@@ -27,7 +23,6 @@ We used a simple Kanban board (Trello) with three columns: `To Do`, `In Progress
 | 4 | Lint (flake8/mypy), Makefile, packaging | ykhalouk, iandalou | Day 13 | Day 15 |
 | 4 | README, project management docs, peer-review prep | ykhalouk, iandalou | Day 14 | Day 16 |
 
-*(A Gantt/Kanban export image can be added here, e.g. `timeline.png`.)*
 
 ---
 

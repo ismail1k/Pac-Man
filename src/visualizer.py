@@ -20,7 +20,9 @@ class Visualizer:
         pygame.init()
         info = pygame.display.Info()
         Visualizer.resolution = (info.current_w, info.current_h)
-        self.screen = pygame.display.set_mode(self.resolution, pygame.FULLSCREEN)
+        self.screen = pygame.display.set_mode(
+            self.resolution  # , pygame.FULLSCREEN
+        )
         self.scenes: list[Widget] = []
 
     def clear(self) -> None:

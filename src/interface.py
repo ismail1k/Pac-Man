@@ -42,7 +42,9 @@ class VText(Widget):
         self.font = pygame.font.Font(
             "assets/fonts/PressStart2P-Regular.ttf", 24
         )
-        super().__init__(self.font.render(self.content, True, color), position)
+        super().__init__(self.font.render(
+            str(self.content), True, color
+        ), position)
         self.color: tuple[int, int, int] = color
 
     @property
@@ -59,7 +61,9 @@ class VText(Widget):
 
     def render(self, visual: Any) -> None:
         """Render the current text content on the visualizer."""
-        self.surface = self.font.render(self.content, True, self.color)
+        self.surface = self.font.render(
+            str(self.content), True, self.color
+        )
         visual.screen.blit(self.surface, self.position)
 
 
@@ -83,9 +87,9 @@ class VField(Widget):
         self.padding.update({'left': 10, 'bottom': 10, 'right': 10, 'top': 10})
 
     @property
-    def surface(self) -> pygame.Surface:
+    def surface(self) -> pygame.surface.Surface:
         """Create and return the rendered field surface."""
-        surface = pygame.Surface(
+        surface = pygame.surface.Surface(
             self.size,
             pygame.SRCALPHA
         )
@@ -105,7 +109,7 @@ class VField(Widget):
         return surface
 
     @surface.setter
-    def surface(self, surface: pygame.Surface) -> None:
+    def surface(self, surface: pygame.surface.Surface) -> None:
         """Set the widget surface and update its dimensions."""
         self.width, self.height = surface.get_size()
         self._surface = surface
@@ -171,7 +175,7 @@ class VSelect(Widget, Controller):
         inline: bool = False
     ) -> None:
         """Initialize a selection widget with its options and layout."""
-        Widget.__init__(self, pygame.Surface((0, 0)), position)
+        Widget.__init__(self, pygame.surface.Surface((0, 0)), position)
         Controller.__init__(self)
         self.options: list[VOption] = options
         self.inline: bool = inline
@@ -246,7 +250,7 @@ class VContainer(Widget):
         inline: bool = False
     ) -> None:
         """Initialize a container with its elements and layout settings."""
-        super().__init__(pygame.Surface((0, 0)), position)
+        super().__init__(pygame.surface.Surface((0, 0)), position)
         self.elements: list[Any] = elements
         self.fullscreen: bool = fullscreen
         self.absolute: bool = absolute

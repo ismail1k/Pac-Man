@@ -20,7 +20,7 @@ class Scene(Widget, ABC):
 
     def __init__(self, scene: Widget) -> None:
         """Initialize scene with a root widget."""
-        Widget.__init__(self, pygame.Surface(Visualizer.resolution))
+        Widget.__init__(self, pygame.surface.Surface(Visualizer.resolution))
         self._scene: Widget = scene
 
     def render(self, visual: Visualizer) -> None:
@@ -85,9 +85,9 @@ class GameplayScreen(Scene, Controller):
         hearts.top = int(gameplay.height / 2)
         hearts.padding.update({'top': 10})
         timer: VText = VText(
-            lambda: f"{
-                int(self.gameplay.states.get('expired_at', time()) - time())
-            } second(s)"
+            lambda:
+            f"{int(self.gameplay.states.get('expired_at', time()) - time())}"
+            " second(s)"
         )
         timer.top = gameplay.height
         timer.left += gameplay.width - timer.width

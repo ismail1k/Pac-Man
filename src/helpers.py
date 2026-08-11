@@ -15,12 +15,12 @@ class Widget(ABC):
 
     def __init__(
         self,
-        surface: pygame.Surface,
+        surface: pygame.surface.Surface,
         position: tuple[int, int] = (0, 0),
         offset: tuple[int, int] = (0, 0)
     ) -> None:
         """Initialize the widget with its surface, position, and offset."""
-        self._surface: pygame.Surface = surface
+        self._surface: pygame.surface.Surface = surface
         self._visible: bool | Callable = True
         self.left, self.top = position
         self.width, self.height = surface.get_size()
@@ -30,12 +30,12 @@ class Widget(ABC):
         }
 
     @property
-    def surface(self) -> pygame.Surface:
+    def surface(self) -> pygame.surface.Surface:
         """Return the surface used to render the widget."""
         return self._surface
 
     @surface.setter
-    def surface(self, surface: pygame.Surface) -> None:
+    def surface(self, surface: pygame.surface.Surface) -> None:
         """Set the widget surface and update its dimensions."""
         self.width, self.height = surface.get_size()
         self._surface = surface

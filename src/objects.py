@@ -50,7 +50,7 @@ class Player(Widget, Playable, Controller):
 
     def __init__(self, canvas: Any, states: dict = {}) -> None:
         """Initialize the player with movement and controller handling."""
-        Widget.__init__(self, pygame.Surface((0, 0)))
+        Widget.__init__(self, pygame.surface.Surface((0, 0)))
         Playable.__init__(self, canvas, states)
         Controller.__init__(self)
         self.onClick(
@@ -84,7 +84,7 @@ class Player(Widget, Playable, Controller):
         self.surface1 = pygame.image.load(self.textures[1]).convert_alpha()
 
     @property
-    def surface(self) -> pygame.Surface:
+    def surface(self) -> pygame.surface.Surface:
         """Return the player's surface based on its direction and state."""
         mouth: int = 0
         angle: int = 0
@@ -115,7 +115,7 @@ class Player(Widget, Playable, Controller):
         return pygame.transform.rotate(surface, angle)
 
     @surface.setter
-    def surface(self, surface: pygame.Surface) -> None:
+    def surface(self, surface: pygame.surface.Surface) -> None:
         """Set the widget surface and update its dimensions."""
         self.width, self.height = surface.get_size()
         self._surface = surface
@@ -149,7 +149,7 @@ class Ghost(Widget, Playable):
 
     def __init__(self, canvas: Any, states: dict = {}) -> None:
         """Initialize the ghost with its canvas and movement state."""
-        Widget.__init__(self, pygame.Surface((0, 0)))
+        Widget.__init__(self, pygame.surface.Surface((0, 0)))
         Playable.__init__(self, canvas, states)
         self.player: Player | None = None
         self.scared_at: float = 0.0
@@ -159,7 +159,7 @@ class Ghost(Widget, Playable):
         self.invincibility: bool = Configuration.get("invincibility", False)
 
     @property
-    def surface(self) -> pygame.Surface:
+    def surface(self) -> pygame.surface.Surface:
         """Return the ghost's current surface based on its state."""
         surface = pygame.image.load(self.textures[self.type]).convert_alpha()
         if self.scared_at + 15 > time():
@@ -172,7 +172,7 @@ class Ghost(Widget, Playable):
         return pygame.transform.smoothscale(surface, (35, 35))
 
     @surface.setter
-    def surface(self, surface: pygame.Surface) -> None:
+    def surface(self, surface: pygame.surface.Surface) -> None:
         """Set the widget surface and update its dimensions."""
         self.width, self.height = surface.get_size()
         self._surface = surface
@@ -304,11 +304,11 @@ class Canvas(Widget):
 
     def __init__(self) -> None:
         """Initialize an empty maze canvas."""
-        super().__init__(pygame.Surface((0, 0)))
+        super().__init__(pygame.surface.Surface((0, 0)))
         self.maze: list[list[int]] = []
 
     @property
-    def surface(self) -> pygame.Surface:
+    def surface(self) -> pygame.surface.Surface:
         """Render and return the maze surface."""
         maze = self.maze
         cell_size = self.cell_size
@@ -331,10 +331,10 @@ class Canvas(Widget):
             0xD: "wall_U_right.png",
             0xE: "wall_U_down.png",
         }
-        surface = pygame.Surface((cols * cell_size, rows * cell_size))
-        tile_cache: dict[str, pygame.Surface | None] = {}
+        surface = pygame.surface.Surface((cols * cell_size, rows * cell_size))
+        tile_cache: dict[str, pygame.surface.Surface | None] = {}
 
-        def get_tile(filename: str) -> pygame.Surface | None:
+        def get_tile(filename: str) -> pygame.surface.Surface | None:
             """Load and cache a maze tile image."""
             if filename not in tile_cache:
                 path = os.path.join(tile_dir, filename)
@@ -371,7 +371,7 @@ class Canvas(Widget):
         return surface
 
     @surface.setter
-    def surface(self, surface: pygame.Surface) -> None:
+    def surface(self, surface: pygame.surface.Surface) -> None:
         """Set the widget surface and update its dimensions."""
         self.width, self.height = surface.get_size()
         self._surface = surface

@@ -4,7 +4,6 @@ Run the Pacman game and manage its screens, gameplay, and score flow.
 
 import sys
 from time import time
-
 from src.exceptions import ParsingException
 from src.parsing import Configuration, Leaderboard
 from src.visualizer import Visualizer

@@ -127,6 +127,8 @@ class Gameplay(VContainer):
             self.canvas, *self.rewards, *self.opponents, self.player
         ]
         self.adjust()
+        Cheat.reset()
+        self.states.update({'freeze': False})
 
     def render(self, visual: Visualizer) -> None:
         """

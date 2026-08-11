@@ -35,12 +35,13 @@ class VText(Widget):
         self,
         content: str | Callable,
         position: tuple[int, int] = (0, 0),
-        color: tuple[int, int, int] = (255, 255, 255)
+        color: tuple[int, int, int] = (255, 255, 255),
+        size: int = 24
     ) -> None:
         """Initialize a text widget with its content, position, and color."""
         self._content: str | Callable = content
         self.font = pygame.font.Font(
-            "assets/fonts/PressStart2P-Regular.ttf", 24
+            "assets/fonts/PressStart2P-Regular.ttf", size
         )
         super().__init__(self.font.render(
             str(self.content), True, color

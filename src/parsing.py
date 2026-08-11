@@ -63,7 +63,7 @@ class Leaderboard:
             items,
             key=lambda r: r['score'],
             reverse=True
-        ))
+        ))[:10]
 
     @staticmethod
     def update(name: str, score: int) -> None:

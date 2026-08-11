@@ -39,6 +39,16 @@ class MainScreen(Scene):
     ) -> None:
         """Build main menu with play, leaderboard, instructions and exit."""
         Audio.menu()
+        players: list[VText] = []
+        for index, record in enumerate(Leaderboard.highscores()):
+            text: VText = VText(
+                f"    {index + 1}. {record['player']} - {record['score']} pts",
+                size=18
+            )
+            text.padding.update({'top': 7, 'bottom': 7})
+            players.append(text)
+        highscores_text: VText = VText("Highscores:")
+        highscores_text.padding.update({'top': 50, 'bottom': 20})
         super().__init__(
             VContainer([
                 VImage(
@@ -62,7 +72,9 @@ class MainScreen(Scene):
                         "4 Exit",
                         onselect=lambda: sys.exit(0)
                     ),
-                ], position=(35, 20))
+                ], position=(35, 20)),
+                highscores_text,
+                *players
             ], fullscreen=True)
         )
 

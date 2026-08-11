@@ -344,11 +344,20 @@ class Utils:
 class Cheat:
     """Stores and toggles gameplay cheat states."""
 
-    invincibility = False
-    level = False
-    ghost_freeze = False
-    extra_lives = False
-    increased_speed = False
+    invincibility: bool = False
+    level: bool = False
+    ghost_freeze: bool = False
+    extra_lives: bool = False
+    increased_speed: bool = False
+
+    @staticmethod
+    def reset() -> None:
+        """Reset all cheat states to their default values."""
+        Cheat.invincibility = False
+        Cheat.level = False
+        Cheat.ghost_freeze = False
+        Cheat.extra_lives = False
+        Cheat.increased_speed = False
 
     @staticmethod
     def set_invincibility() -> None:

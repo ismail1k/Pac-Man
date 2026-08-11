@@ -5,10 +5,15 @@ import random
 import os
 from time import time
 from typing import Any
-from mazegenerator import MazeGenerator
 from src.parsing import Configuration
 from src.visualizer import Visualizer
 from src.helpers import Widget, Playable, Controller, Cheat
+
+try:
+    from mazegenerator import MazeGenerator
+except Exception as e:
+    print(f"Error: {e}")
+    exit(1)
 
 
 class Reward(Widget, Playable):

@@ -23,6 +23,9 @@ class Pacman:
 
     def __init__(self) -> None:
         """Load configuration and initialize the visualizer and gameplay."""
+        if len(sys.argv) < 2:
+            print("Error: you should add config file!")
+            exit(1)
         Configuration.loadJSONFile(sys.argv[1])
         Leaderboard.loadJSONFile(
             Configuration.get("highscore_filename", "highscore.json")

@@ -4,7 +4,7 @@ Run the Pacman game and manage its screens, gameplay, and score flow.
 
 import sys
 from time import time
-from src.exceptions import ParsingException
+from src.exceptions import ParsingException, RuntimeException
 from src.parsing import Configuration, Leaderboard
 from src.visualizer import Visualizer
 from src.playground import Gameplay
@@ -24,8 +24,7 @@ class Pacman:
     def __init__(self) -> None:
         """Load configuration and initialize the visualizer and gameplay."""
         if len(sys.argv) < 2:
-            print("Error: you should add config file!")
-            exit(1)
+            raise ParsingException('you should add config file!')
         Configuration.loadJSONFile(sys.argv[1])
         Leaderboard.loadJSONFile(
             Configuration.get("highscore_filename", "highscore.json")
@@ -120,5 +119,8 @@ if __name__ == "__main__":
         platform.launch()
         platform.visual.render()
     except ParsingException as exception:
+        print(exception)
+        sys.exit(1)
+    except RuntimeException as exception:
         print(exception)
         sys.exit(1)
